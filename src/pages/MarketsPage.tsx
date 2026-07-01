@@ -3,8 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { sampleSignals, alternativeAssets } from '../data/mockData';
 import { Market, Timeframe } from '../types';
-import { generateCandleData, generateLiveSignal, fetchLiveChart, priceSeriesToCandles } from '../services/marketService';
-import TradingViewChart from '../components/TradingViewChart';
+import { CandleData, fetchExchangeCandles, generateCandleData, generateLiveSignal } from '../services/marketService';
 import { Search, Zap, TrendingUp, TrendingDown, AlertTriangle, Shield, BarChart2, ArrowUpRight, ArrowDownRight, ChevronRight, Info, Layers, Eye, Clock, RefreshCw } from 'lucide-react';
 
 export default function MarketsPage() {
@@ -19,7 +18,7 @@ export default function MarketsPage() {
   const [signalState, setSignalState] = useState<'idle' | 'loading' | 'result' | 'no_signal'>('idle');
   const [loadingStep, setLoadingStep] = useState(0);
   const [currentSignal, setCurrentSignal] = useState(sampleSignals[0]);
-  const [chartData, setChartData] = useState<{ time: string; price: number }[] | null>(null);
+  const [chartData, setChartData] = useState<CandleData[] | null>(null);
   const [chartLoading, setChartLoading] = useState(false);
   const [signalHold, setSignalHold] = useState<Timeframe>('5m');
 
@@ -32,21 +31,28 @@ export default function MarketsPage() {
     return matchMarket && matchSearch;
   });
 
-  // Fetch live chart data when asset changes
+  // Fetch exchange candles when the asset or timeframe changes.
   useEffect(() => {
     let mounted = true;
     setChartData(null);
     setChartLoading(true);
-    fetchLiveChart(selectedAssetId).then(data => {
-      if (mounted && data) setChartData(data);
+    fetchExchangeCandles(selectedAssetId, timeframe).then(data => {
+      if (mounted && data?.length) setChartData(data);
       if (mounted) setChartLoading(false);
     });
     return () => { mounted = false; };
-  }, [selectedAssetId]);
+  }, [selectedAssetId, timeframe]);
 
-  const candleData = chartData
-    ? priceSeriesToCandles(chartData, selectedAsset.price, timeframe)
-    : generateCandleData(selectedAsset.price, timeframe);
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      fetchExchangeCandles(selectedAssetId, timeframe).then(data => {
+        if (data?.length) setChartData(data);
+      });
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, [selectedAssetId, timeframe]);
+
+  const candleData = chartData?.length ? chartData : generateCandleData(selectedAsset.price, timeframe);
   const currentChartPrice = candleData[candleData.length - 1]?.close || selectedAsset.price;
 
   const loadingSteps = [
@@ -167,7 +173,7 @@ export default function MarketsPage() {
             {chartLoading ? (
               <div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-gray-700 border-t-cyan-400 rounded-full animate-spin" /></div>
             ) : (
-              <TradingViewChart assetId={selectedAssetId} timeframe={timeframe} />
+              <CandlestickChart data={candleData} formatPrice={formatPrice} />
             )}
           </div>
           <div className="flex gap-2 p-3 border-t border-gray-800">
@@ -305,7 +311,8 @@ export default function MarketsPage() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Entry & Exit Zones</h4>
                   <div className="bg-gray-800/50 rounded-xl p-3 space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-500">Entry Zone</span><span className="font-mono">{formatPrice(currentSignal.entryZone[0])} - {formatPrice(currentSignal.entryZone[1])}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Current Chart Price</span><span className="font-mono text-white">{formatPrice(currentChartPrice)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Entry Zone <span className="text-[10px] text-gray-600">(preferred range)</span></span><span className="font-mono">{formatPrice(currentSignal.entryZone[0])} - {formatPrice(currentSignal.entryZone[1])}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Stop Loss</span><span className="font-mono text-red-400">{formatPrice(currentSignal.stopLoss)}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Take Profit 1</span><span className="font-mono text-green-400">{formatPrice(currentSignal.takeProfit1)}</span></div>
                     <div className="flex justify-between"><span className="text-gray-500">Take Profit 2</span><span className="font-mono text-green-400">{formatPrice(currentSignal.takeProfit2)}</span></div>
@@ -394,6 +401,71 @@ export default function MarketsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function CandlestickChart({ data, formatPrice }: { data: CandleData[]; formatPrice: (price: number) => string }) {
+  const width = 760;
+  const height = 540;
+  const rightAxis = 118;
+  const chartWidth = width - rightAxis;
+  const chartHeight = 415;
+  const volumeTop = 428;
+  const volumeHeight = 96;
+  const paddingTop = 16;
+  const values = data.flatMap(candle => [candle.high, candle.low]);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = Math.max(max - min, 0.000001);
+  const maxVolume = Math.max(...data.map(candle => candle.volume), 1);
+  const current = data[data.length - 1]?.close || 0;
+  const yFor = (price: number) => paddingTop + ((max - price) / range) * (chartHeight - paddingTop - 12);
+  const xStep = chartWidth / data.length;
+  const candleWidth = Math.max(3, Math.min(9, xStep * 0.62));
+  const currentY = yFor(current);
+  const axisTicks = Array.from({ length: 10 }, (_, i) => max - (range / 9) * i);
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full bg-white" preserveAspectRatio="none">
+      <rect x="0" y="0" width={width} height={height} fill="#ffffff" />
+      {axisTicks.map((tick, index) => {
+        const y = yFor(tick);
+        return (
+          <g key={index}>
+            <line x1="0" y1={y} x2={chartWidth} y2={y} stroke="#ececec" strokeWidth="1" />
+            <text x={chartWidth + 14} y={y + 5} fill="#111827" fontSize="15" fontWeight={index % 2 === 0 ? 700 : 400}>
+              {formatPrice(tick)}
+            </text>
+          </g>
+        );
+      })}
+      {Array.from({ length: 8 }, (_, index) => (
+        <line key={index} x1={(chartWidth / 7) * index} y1="0" x2={(chartWidth / 7) * index} y2={height} stroke="#f0f0f0" strokeWidth="1" />
+      ))}
+      {data.map((candle, index) => {
+        const x = index * xStep + xStep / 2;
+        const up = candle.close >= candle.open;
+        const color = up ? '#089981' : '#f23645';
+        const bodyTop = yFor(Math.max(candle.open, candle.close));
+        const bodyBottom = yFor(Math.min(candle.open, candle.close));
+        const bodyHeight = Math.max(2, bodyBottom - bodyTop);
+        const volumeHeightPx = (candle.volume / maxVolume) * volumeHeight;
+
+        return (
+          <g key={`${candle.time}-${index}`}>
+            <line x1={x} y1={yFor(candle.high)} x2={x} y2={yFor(candle.low)} stroke={color} strokeWidth="1.4" />
+            <rect x={x - candleWidth / 2} y={bodyTop} width={candleWidth} height={bodyHeight} fill={color} />
+            <rect x={x - candleWidth / 2} y={volumeTop + (volumeHeight - volumeHeightPx)} width={candleWidth} height={volumeHeightPx} fill={up ? '#7fcac3' : '#f6a2a8'} opacity="0.88" />
+          </g>
+        );
+      })}
+      <line x1="0" y1={currentY} x2={chartWidth} y2={currentY} stroke="#f23645" strokeWidth="1" strokeDasharray="2 5" />
+      <rect x={chartWidth + 4} y={currentY - 19} width="106" height="38" rx="2" fill="#f23645" />
+      <text x={chartWidth + 13} y={currentY - 2} fill="white" fontSize="17" fontWeight="600">{formatPrice(current)}</text>
+      <text x={chartWidth + 13} y={currentY + 14} fill="white" fontSize="13">00:14</text>
+      <rect x={chartWidth + 4} y={volumeTop + volumeHeight - 24} width="78" height="22" rx="2" fill="#f23645" />
+      <text x={chartWidth + 18} y={volumeTop + volumeHeight - 8} fill="white" fontSize="16">110</text>
+    </svg>
   );
 }
 

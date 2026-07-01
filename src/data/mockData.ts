@@ -65,9 +65,8 @@ export const assets: Asset[] = [
 ];
 
 // === EXPERT SIGNAL ENGINE — 6-LAYER HYBRID SYSTEM ===
-// This simulates the output of our hybrid engine that beats chartanalyst.ai
-// Their system: single screenshot upload → basic pattern recognition
-// Our system: 6-layer real-time analysis → confidence-scored multi-factor signals
+// This simulates the output of the hybrid signal engine.
+// Production should replace these templates with backend-generated signals from live candles.
 //
 // LAYER 1: Market Data Engine (live + historical OHLCV)
 // LAYER 2: Technical Analysis Engine (30+ indicators computed simultaneously)
@@ -180,8 +179,8 @@ export const plans: Plan[] = [
 ];
 
 export const faqs: FAQ[] = [
-  { id: '1', question: 'How is Trendora better than chartanalyst.ai?', answer: 'ChartAnalyst uses single screenshot upload for basic pattern recognition. Trendora uses a 6-layer hybrid engine: (1) Live market data, (2) 30+ technical indicators computed simultaneously, (3) Market regime detection, (4) Multi-factor signal scoring, (5) AI-powered multilingual explanations, (6) Cross-asset alternative ranking. Our signals are real-time, not based on static screenshots.', category: 'Comparison' },
-  { id: '2', question: 'How accurate are Trendora signals?', answer: 'Our signals use multi-layer confidence scoring. Each signal shows: (1) Current Setup Confidence (e.g., 94%), (2) Strategy Historical Success Rate for similar setups (e.g., 79%), (3) Market Risk Level (Low/Medium/High). We never claim 100% — that\'s dishonest. But our 6-layer system consistently identifies higher-probability setups than single-indicator or screenshot-based tools.', category: 'Signals' },
+  { id: '1', question: 'How does Trendora generate signals?', answer: 'Trendora uses a 6-layer hybrid engine: live market data, 30+ technical indicators, market regime detection, multi-factor signal scoring, AI-powered explanations, and cross-asset opportunity ranking.', category: 'Signals' },
+  { id: '2', question: 'How accurate are Trendora signals?', answer: 'Each signal shows setup confidence, historical success rate for similar setups, and risk level. The system is designed to filter weak setups and only show higher-quality opportunities instead of forcing a trade.', category: 'Signals' },
   { id: '3', question: 'What markets does Trendora support?', answer: 'We support 40+ assets across 4 markets: Crypto (BTC, ETH, SOL, BNB, GAS tokens, and 20+ altcoins), Gold (XAU/USD, XAU/EUR, XAU/GBP, Gold Futures), Silver (XAG/USD, XAG/EUR, Silver Futures), and Oil/Energy (WTI, Brent, Natural Gas, Heating Oil, RBOB Gasoline).', category: 'General' },
   { id: '4', question: 'What happens if no signal is available?', answer: 'When conditions don\'t meet our high threshold, we honestly tell you "No strong setup right now" and suggest alternative assets with better confidence scores across all markets. This restraint improves trust and your outcomes.', category: 'Signals' },
   { id: '5', question: 'Can I use Trendora as a beginner?', answer: 'Absolutely! Trendora provides simple explanations for every signal, a learning section with 8 modules, and guided onboarding. Our beginner mode explains everything in plain language with risk warnings.', category: 'Getting Started' },
@@ -241,7 +240,7 @@ export const learningModules = [
   { id: '5', title: 'Multi-Timeframe Analysis', description: 'Why aligning 1H, 4H, and 1D signals dramatically improves your edge', duration: '9 min read', category: 'Advanced', icon: '⏱️' },
   { id: '6', title: 'When Not to Trade', description: 'The most profitable skill: knowing when "no signal" is the best signal', duration: '5 min read', category: 'Mindset', icon: '🧘' },
   { id: '7', title: 'Block Allocation Strategy', description: 'How to divide capital across multiple signals using risk-based allocation', duration: '8 min read', category: 'Advanced', icon: '🧱' },
-  { id: '8', title: 'Why Trendora Beats Screenshot Analysis', description: 'Understanding why real-time multi-layer analysis outperforms chart screenshot tools', duration: '6 min read', category: 'Comparison', icon: '⚡' },
+  { id: '8', title: 'Live Signal Quality', description: 'Understanding why clean data, confirmation, and risk filters matter', duration: '6 min read', category: 'Signals', icon: '⚡' },
   { id: '9', title: 'Understanding Wyckoff Phases', description: 'Accumulation, markup, distribution, markdown — reading institutional flow', duration: '12 min read', category: 'Advanced', icon: '🏛️' },
   { id: '10', title: 'Order Flow & Smart Money', description: 'How to read volume profiles and detect institutional accumulation', duration: '10 min read', category: 'Advanced', icon: '🐋' },
 ];

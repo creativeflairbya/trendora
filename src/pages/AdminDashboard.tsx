@@ -48,8 +48,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="p-4 flex items-center gap-3">
+    <div className="space-y-4 md:grid md:grid-cols-[240px_1fr] md:gap-6 md:space-y-0 md:py-6">
+      <div className="p-4 flex items-center gap-3 md:col-span-2 md:rounded-2xl md:bg-gray-900 md:border md:border-gray-800">
         <button onClick={() => navigate('/dashboard')} className="p-2 rounded-lg hover:bg-gray-800 transition">
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -62,16 +62,16 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="px-4 flex gap-1.5 overflow-x-auto pb-2">
+      <div className="px-4 flex gap-1.5 overflow-x-auto pb-2 md:overflow-visible md:flex-col md:gap-2 md:p-3 md:rounded-2xl md:bg-gray-900 md:border md:border-gray-800 md:self-start">
         {tabs.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition ${activeTab === tab.key ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'}`}>
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium whitespace-nowrap transition md:w-full md:text-left ${activeTab === tab.key ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-800'}`}>
             {tab.icon} {tab.label}
           </button>
         ))}
       </div>
 
-      <div className="px-4 pb-8">
+      <div className="px-4 pb-8 md:px-0 md:pb-0">
         {activeTab === 'overview' && <OverviewTab />}
         {activeTab === 'users' && <UsersTab search={searchUsers} setSearch={setSearchUsers} />}
         {activeTab === 'signals' && <SignalsTab />}
@@ -98,7 +98,7 @@ function StatCard({ label, value, icon, color }: { label: string; value: string 
 function OverviewTab() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Total Users" value={adminStats.totalUsers} icon={<Users className="w-4 h-4 text-cyan-400" />} color="bg-cyan-500/20" />
         <StatCard label="Active Subs" value={adminStats.activeSubscribers} icon={<DollarSign className="w-4 h-4 text-green-400" />} color="bg-green-500/20" />
         <StatCard label="MRR" value={`$${adminStats.mrr.toLocaleString()}`} icon={<TrendingUp className="w-4 h-4 text-purple-400" />} color="bg-purple-500/20" />
@@ -139,7 +139,7 @@ function OverviewTab() {
       </div>
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
         <h3 className="font-bold text-sm mb-3">System Health</h3>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {[{label:'API',s:'Operational'},{label:'Signal Engine',s:'Running'},{label:'Payment GW',s:'Operational'},{label:'Database',s:'Healthy'}].map(item=>(
             <div key={item.label} className="bg-gray-800/50 rounded-lg p-2 flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-400" />
@@ -186,7 +186,7 @@ function UsersTab({ search, setSearch }: { search: string; setSearch: (s: string
 function SignalsTab() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Total Generated" value="284,920" icon={<Activity className="w-4 h-4 text-cyan-400" />} color="bg-cyan-500/20" />
         <StatCard label="Avg Confidence" value="79.4%" icon={<Zap className="w-4 h-4 text-purple-400" />} color="bg-purple-500/20" />
       </div>
@@ -223,7 +223,7 @@ function AIConfigTab() {
     <div className="space-y-4">
       <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-4">
         <h3 className="font-bold text-sm mb-2">🧠 6-Layer Hybrid Engine</h3>
-        <p className="text-xs text-gray-400">This system is what makes Trendora superior to chartanalyst.ai and other single-dimension tools. Each layer adds confirmation quality.</p>
+        <p className="text-xs text-gray-400">Each layer adds confirmation quality before a signal is allowed through the risk filter.</p>
       </div>
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
         <h3 className="font-bold text-sm mb-3">Engine Layer Weights</h3>
@@ -306,7 +306,7 @@ function BillingTab() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="MRR" value="$155,520" icon={<DollarSign className="w-4 h-4 text-green-400" />} color="bg-green-500/20" />
         <StatCard label="Active Subs" value="3,891" icon={<Users className="w-4 h-4 text-cyan-400" />} color="bg-cyan-500/20" />
       </div>
@@ -445,12 +445,12 @@ function AnalyticsTab() {
         </div>
       </div>
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-        <h3 className="font-bold text-sm mb-3">vs. ChartAnalyst.ai</h3>
+        <h3 className="font-bold text-sm mb-3">Signal Quality Stack</h3>
         <div className="space-y-2">
-          {[{f:'Analysis Method',us:'6-Layer Real-time',them:'Screenshot Upload'},{f:'Indicators',us:'30+ Simultaneous',them:'Basic (5-8)'},{f:'Market Regime',us:'✅ Detected',them:'❌ No'},{f:'Alternatives',us:'✅ Cross-asset',them:'❌ No'},{f:'Live Data',us:'✅ Real-time',them:'❌ Static image'},{f:'Multi-Timeframe',us:'✅ 7 TFs',them:'Single TF only'},{f:'Accuracy (Avg)',us:'79% confidence',them:'~55-65% estimated'},{f:'Languages',us:'13 languages',them:'1-2 languages'}].map(c=>(
+          {[{f:'Analysis Method',us:'6-Layer Real-time',them:'Required'},{f:'Indicators',us:'30+ Simultaneous',them:'Enabled'},{f:'Market Regime',us:'Detected',them:'Enabled'},{f:'Alternatives',us:'Cross-asset',them:'Enabled'},{f:'Live Data',us:'Exchange candles',them:'Enabled'},{f:'Multi-Timeframe',us:'8 TFs',them:'Enabled'},{f:'Signal Filter',us:'Confidence + risk gate',them:'Enabled'},{f:'Languages',us:'13 languages',them:'Enabled'}].map(c=>(
             <div key={c.f} className="flex items-center justify-between bg-gray-800/50 rounded-lg p-3">
               <span className="text-xs text-gray-400">{c.f}</span>
-              <div className="text-right"><span className="text-xs text-cyan-400">{c.us}</span><span className="text-[10px] text-gray-600 ml-2">vs {c.them}</span></div>
+              <div className="text-right"><span className="text-xs text-cyan-400">{c.us}</span><span className="text-[10px] text-gray-600 ml-2">{c.them}</span></div>
             </div>
           ))}
         </div>

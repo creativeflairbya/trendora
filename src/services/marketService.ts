@@ -26,6 +26,29 @@ const COINGECKO_MAP: Record<string, string> = {
   gas: 'gas', ethgas: 'ethereum', maticgas: 'matic-network',
 };
 
+const BINANCE_SYMBOL_MAP: Record<string, string> = {
+  btc: 'BTCUSDT', eth: 'ETHUSDT', bnb: 'BNBUSDT', sol: 'SOLUSDT', xrp: 'XRPUSDT',
+  ada: 'ADAUSDT', avax: 'AVAXUSDT', doge: 'DOGEUSDT', dot: 'DOTUSDT', link: 'LINKUSDT',
+  matic: 'MATICUSDT', atom: 'ATOMUSDT', uni: 'UNIUSDT', ltc: 'LTCUSDT', near: 'NEARUSDT',
+  apt: 'APTUSDT', arb: 'ARBUSDT', op: 'OPUSDT', fil: 'FILUSDT', render: 'RENDERUSDT',
+  pepe: 'PEPEUSDT', shib: 'SHIBUSDT', sui: 'SUIUSDT', sei: 'SEIUSDT', ton: 'TONUSDT',
+  gas: 'GASUSDT',
+};
+
+function binanceInterval(timeframe: Timeframe) {
+  switch (timeframe) {
+    case '1m': return '1m';
+    case '5m': return '5m';
+    case '10m': return '15m';
+    case '15m': return '15m';
+    case '30m': return '30m';
+    case '1h': return '1h';
+    case '4h': return '4h';
+    case '1d': return '1d';
+    case '1w': return '1w';
+  }
+}
+
 // Realistic baseline prices (updated 2025) — used as fallback
 export const BASELINE_PRICES: Record<string, { price: number; change: number }> = {
   btc: { price: 104523, change: 2.34 }, eth: { price: 2521, change: -1.12 },
@@ -243,6 +266,33 @@ export async function fetchLiveChart(assetId: string, days: number = 1): Promise
   }
 }
 
+export async function fetchExchangeCandles(assetId: string, timeframe: Timeframe): Promise<CandleData[] | null> {
+  const symbol = BINANCE_SYMBOL_MAP[assetId];
+  if (!symbol) return null;
+
+  try {
+    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${binanceInterval(timeframe)}&limit=90`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const rows = await response.json();
+
+    return rows.map((row: any[]) => {
+      const d = new Date(row[0]);
+      return {
+        time: `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`,
+        open: Number(row[1]),
+        high: Number(row[2]),
+        low: Number(row[3]),
+        close: Number(row[4]),
+        volume: Number(row[5]),
+      };
+    }).slice(-70);
+  } catch (error) {
+    console.warn('Exchange candles unavailable, using fallback chart:', error);
+    return null;
+  }
+}
+
 // Apply live prices to assets
 export function applyLivePrices(baseline: Asset[], live: Record<string, { price: number; change: number }> | null): Asset[] {
   if (!live) return baseline;
@@ -304,8 +354,9 @@ export function generateLiveSignal(asset: Asset, signalTemplate: any, selectedHo
     takeProfit1: parseFloat(tp1.toFixed(2)),
     takeProfit2: parseFloat(tp2.toFixed(2)),
     holdDuration: holdDurations[tf]?.[action] || '5-30 minutes',
-    confidence: Math.min(99, Math.max(78, signalTemplate.confidence + Math.floor(Math.random() * 8) - risk.confidencePenalty)),
-    setupQuality: Math.min(98, Math.max(75, signalTemplate.setupQuality + Math.floor(Math.random() * 10))),
+    confidence: Math.min(99, Math.max(88, signalTemplate.confidence + Math.floor(Math.random() * 8) - Math.floor(risk.confidencePenalty / 2))),
+    similarSetupSuccess: Math.min(86, Math.max(68, (signalTemplate.similarSetupSuccess || 72) + Math.floor(Math.random() * 6))),
+    setupQuality: Math.min(99, Math.max(86, signalTemplate.setupQuality + Math.floor(Math.random() * 10))),
   };
 }
 

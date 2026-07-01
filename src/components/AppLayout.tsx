@@ -20,15 +20,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const planNames: Record<string, string> = { free: 'Free', starter: 'Starter', active: 'Active', pro: 'Pro', unlimited: 'Unlimited' };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col max-w-md mx-auto relative">
+    <div className="min-h-screen bg-gray-950 flex flex-col w-full md:max-w-none md:mx-0 max-w-md mx-auto relative">
       {/* Top Header */}
       <header className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-lg border-b border-gray-800">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 md:px-8 py-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-lg bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Trendora</span>
+          </div>
+          <div className="hidden md:flex items-center gap-1 rounded-2xl bg-gray-950/60 border border-gray-800 p-1">
+            {navItems.map(item => (
+              <NavLink key={item.to} to={item.to} className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition ${isActive ? 'bg-cyan-500/15 text-cyan-300' : 'text-gray-400 hover:text-white hover:bg-gray-800/70'}`}>
+                <item.icon className="w-4 h-4" /> {item.label}
+              </NavLink>
+            ))}
+            <NavLink to="/pricing" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition ${isActive ? 'bg-cyan-500/15 text-cyan-300' : 'text-gray-400 hover:text-white hover:bg-gray-800/70'}`}>
+              <ChevronUp className="w-4 h-4" /> Plans
+            </NavLink>
           </div>
           <div className="flex items-center gap-3">
             {/* Signal Counter */}
@@ -48,7 +58,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         {/* Plan Badge */}
-        <div className="px-4 pb-2 flex items-center gap-2">
+        <div className="px-4 md:px-8 pb-2 flex items-center gap-2 md:justify-end">
           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
             user?.plan === 'unlimited' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' :
             user?.plan === 'pro' ? 'bg-purple-500/20 text-purple-400' :
@@ -109,12 +119,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pb-20">
-        {children}
+      <main className="flex-1 overflow-y-auto pb-20 md:pb-8 md:px-6 lg:px-8">
+        <div className="md:max-w-7xl md:mx-auto">
+          {children}
+        </div>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 z-40">
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-gray-900/95 backdrop-blur-lg border-t border-gray-800 z-40 md:hidden">
         <div className="flex items-center justify-around py-2">
           {navItems.map(item => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => `flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition ${isActive ? 'text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}>

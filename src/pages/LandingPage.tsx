@@ -42,7 +42,7 @@ export default function LandingPage() {
             <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">Simple Decisions.</span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-            Trendora uses a 6-layer hybrid engine to analyze crypto, gold, oil, and silver with 30+ indicators, real-time data, and confidence-based AI signals — far beyond screenshot-based tools.
+            Trendora uses a 6-layer hybrid engine to analyze crypto, gold, oil, and silver with 30+ indicators, live market data, and confidence-based AI signals.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <button onClick={() => navigate('/signup')} className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25">
@@ -164,14 +164,14 @@ export default function LandingPage() {
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why Trendora Beats the Competition</h2>
-          <p className="text-gray-400">6-Layer real-time analysis vs. single screenshot uploads. No contest.</p>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why Trendora is Different</h2>
+          <p className="text-gray-400">Live data, disciplined signal filters, and clear risk scoring.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
               { icon: '🧠', title: '6-Layer Hybrid Engine', desc: 'Market data + 30+ indicators + regime detection + signal scoring + AI synthesis + alternatives — all running simultaneously.' },
               { icon: '🛡️', title: 'Says "No Signal" When Needed', desc: 'We tell you when to wait. That restraint improves trust and your outcomes — unlike tools that force signals.' },
-              { icon: '📊', title: 'Real-Time, Not Screenshots', desc: 'No uploading charts. We analyze live data across 40+ assets in real-time with 7 timeframes.' },
+              { icon: '📊', title: 'Real-Time Market View', desc: 'Analyze live-style candles across 40+ assets with multiple timeframes and hold settings.' },
               { icon: '🔄', title: 'Safer Alternatives', desc: 'No strong setup? Our L6 engine suggests better opportunities across all markets with confidence scores.' },
               { icon: '🌐', title: '13 Languages + Local Payments', desc: 'Use Trendora in your language. Pay with Easypaisa, JazzCash, UPI, Pix, Binance Pay, and 25+ methods.' },
               { icon: '🔒', title: 'Security-First + Honest', desc: 'Encrypted, monitored, hardened. Three separate accuracy metrics — not fake "99%" claims.' },
@@ -235,7 +235,7 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-3 gap-4">
             {[
               { name: 'Ahmed K.', role: 'Crypto Trader', text: 'Finally a signal app that says "no signal" instead of forcing bad trades. My win rate improved significantly.', stars: 5 },
-              { name: 'Sarah M.', role: 'Gold Investor', text: 'The confidence scores and alternatives feature is a game-changer. Much better than chartanalyst.ai', stars: 5 },
+              { name: 'Sarah M.', role: 'Gold Investor', text: 'The confidence scores and alternatives feature is a game-changer for my market planning.', stars: 5 },
               { name: 'Raj P.', role: 'Beginner Trader', text: 'As a beginner, the simple explanations and learning section helped me understand what I was actually doing.', stars: 5 },
             ].map(t => (
               <div key={t.name} className="p-5 rounded-2xl bg-gray-900/50 border border-gray-800">
@@ -290,46 +290,6 @@ export default function LandingPage() {
             {['💳 Visa/MC', '🍎 Apple Pay', '📱 Google Pay', '🅿️ PayPal', '📲 Easypaisa', '📲 JazzCash', '📱 UPI', '💳 Razorpay', '💳 PayTabs', '💳 Flutterwave', '📱 Pix', '₮ USDT', '🅱️ Binance Pay', '🏦 Bank Transfer'].map(m => (
               <span key={m} className="px-4 py-2 rounded-xl bg-gray-900 border border-gray-800 text-sm text-gray-300">{m}</span>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ChartAnalyst Comparison */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-4">
-              <span className="text-cyan-400 text-sm font-medium">⚡ 6-Layer Hybrid Engine</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Trendora vs. Screenshot-Based Tools</h2>
-            <p className="text-gray-400">Why real-time multi-layer analysis beats static chart uploads</p>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-3 gap-0 text-sm">
-              <div className="p-3 border-b border-gray-800 font-semibold text-gray-400">Feature</div>
-              <div className="p-3 border-b border-gray-800 font-bold text-center text-cyan-400">Trendora</div>
-              <div className="p-3 border-b border-gray-800 font-semibold text-center text-gray-500">Others</div>
-              {[ 
-                ['Analysis', '6-Layer Real-time', 'Screenshot Upload'],
-                ['Indicators', '30+ Simultaneous', '5-8 Basic'],
-                ['Market Regime', '✅ Detected', '❌ None'],
-                ['Alternatives', '✅ Cross-asset', '❌ None'],
-                ['Live Data', '✅ Real-time', '❌ Static Image'],
-                ['Multi-Timeframe', '✅ 7 TFs', 'Single TF'],
-                ['Wyckoff Analysis', '✅ Included', '❌ None'],
-                ['Order Flow', '✅ Analyzed', '❌ Not Available'],
-                ['Confidence Score', '✅ 3 Metrics', 'Basic %'],
-                ['Honest No-Signal', '✅ Yes', '❌ Forced Signals'],
-                ['Languages', '13+', '1-2'],
-                ['Assets Covered', '40+', '10-15'],
-              ].map((row, i) => (
-                <>
-                  <div key={`f${i}`} className="p-2.5 border-b border-gray-800/50 text-xs text-gray-300">{row[0]}</div>
-                  <div key={`t${i}`} className="p-2.5 border-b border-gray-800/50 text-center text-xs text-cyan-400 font-medium">{row[1]}</div>
-                  <div key={`o${i}`} className="p-2.5 border-b border-gray-800/50 text-center text-xs text-gray-500">{row[2]}</div>
-                </>
-              ))}
-            </div>
           </div>
         </div>
       </section>
