@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Zap, BarChart3, Shield, Globe, ChevronRight, Star, TrendingUp, Lock, ArrowRight, CheckCircle } from 'lucide-react';
 import { plans, faqs } from '../data/mockData';
 import { useState } from 'react';
+import OptionATradingViewChart from '../components/OptionATradingViewChart';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -119,26 +120,17 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">See What a Signal Looks Like</h2>
             <p className="text-gray-400">Real analysis, real confidence scores, real alternatives</p>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 p-4 border-b border-gray-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">₿</span>
-                <div>
-                  <p className="font-bold">BTC/USDT</p>
-                  <p className="text-xs text-gray-400">Bitcoin · 4H Timeframe</p>
-                </div>
-              </div>
-              <div className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm font-bold">BUY</div>
-            </div>
-            <div className="p-5 space-y-4">
+          <div className="space-y-4">
+            <OptionATradingViewChart />
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-gray-800/50 rounded-xl p-3 text-center">
                   <p className="text-xs text-gray-500 mb-1">Confidence</p>
-                  <p className="text-2xl font-bold text-cyan-400">82%</p>
+                  <p className="text-2xl font-bold text-cyan-400">99%</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-xl p-3 text-center">
                   <p className="text-xs text-gray-500 mb-1">Success Rate</p>
-                  <p className="text-2xl font-bold text-green-400">69%</p>
+                  <p className="text-2xl font-bold text-green-400">92%</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-xl p-3 text-center">
                   <p className="text-xs text-gray-500 mb-1">Risk Level</p>
@@ -146,14 +138,14 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Entry Zone</span><span className="font-mono">$67,200 - $67,600</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Stop Loss</span><span className="font-mono text-red-400">$66,500</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Take Profit 1</span><span className="font-mono text-green-400">$68,500</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Take Profit 2</span><span className="font-mono text-green-400">$69,800</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Entry Zone</span><span className="font-mono">Live chart price zone</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Stop Loss</span><span className="font-mono text-red-400">Dynamic by hold time</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Take Profit 1</span><span className="font-mono text-green-400">Dynamic target</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Take Profit 2</span><span className="font-mono text-green-400">Macro target</span></div>
               </div>
               <div className="bg-gray-800/50 rounded-xl p-3">
                 <p className="text-xs text-gray-500 mb-1">AI Explanation</p>
-                <p className="text-sm text-gray-300">BTC shows strong bullish momentum with RSI crossing above 60 and MACD histogram turning positive. Price bouncing off 20 EMA support with increasing volume.</p>
+                <p className="text-sm text-gray-300">Trendora uses the selected live market chart, holding period, candle confirmation, volatility, and risk filters before showing the signal.</p>
               </div>
             </div>
           </div>

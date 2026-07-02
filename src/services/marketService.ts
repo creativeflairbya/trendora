@@ -1,12 +1,12 @@
 // === LIVE MARKET DATA SERVICE ===
-// Fetches real-time prices from CoinGecko (free, no API key needed)
-// For commodities (gold, silver, oil), falls back to realistic estimates
-// Production: Replace commodity estimates with Alpha Vantage / Twelve Data API
+// Uses Bitget USDT futures candles/tickers where Bitget provides the instrument.
+// Fallback candles are only used when a selected instrument is unavailable from Bitget.
 
 import { Asset, Market, Timeframe } from '../types';
 
 export interface CandleData {
   time: string;
+  timestamp?: number;
   open: number;
   high: number;
   low: number;
@@ -14,39 +14,46 @@ export interface CandleData {
   volume: number;
 }
 
-// CoinGecko ID mapping for all crypto assets
-const COINGECKO_MAP: Record<string, string> = {
-  btc: 'bitcoin', eth: 'ethereum', bnb: 'binancecoin', sol: 'solana',
-  xrp: 'ripple', ada: 'cardano', avax: 'avalanche-2', doge: 'dogecoin',
-  dot: 'polkadot', link: 'chainlink', matic: 'matic-network', atom: 'cosmos',
-  uni: 'uniswap', ltc: 'litecoin', near: 'near', apt: 'aptos',
-  arb: 'arbitrum', op: 'optimism', fil: 'filecoin', render: 'render-token',
-  pepe: 'pepe', shib: 'shiba-inu', inu: 'floki', sui: 'sui',
-  sei: 'sei-network', ton: 'the-open-network', ftm: 'fantom', egld: 'elrond-erd-2',
-  gas: 'gas', ethgas: 'ethereum', maticgas: 'matic-network',
-};
-
-const BINANCE_SYMBOL_MAP: Record<string, string> = {
+export const BITGET_FUTURES_SYMBOL_MAP: Record<string, string> = {
   btc: 'BTCUSDT', eth: 'ETHUSDT', bnb: 'BNBUSDT', sol: 'SOLUSDT', xrp: 'XRPUSDT',
   ada: 'ADAUSDT', avax: 'AVAXUSDT', doge: 'DOGEUSDT', dot: 'DOTUSDT', link: 'LINKUSDT',
-  matic: 'MATICUSDT', atom: 'ATOMUSDT', uni: 'UNIUSDT', ltc: 'LTCUSDT', near: 'NEARUSDT',
-  apt: 'APTUSDT', arb: 'ARBUSDT', op: 'OPUSDT', fil: 'FILUSDT', render: 'RENDERUSDT',
-  pepe: 'PEPEUSDT', shib: 'SHIBUSDT', sui: 'SUIUSDT', sei: 'SEIUSDT', ton: 'TONUSDT',
-  gas: 'GASUSDT',
+  atom: 'ATOMUSDT', uni: 'UNIUSDT', ltc: 'LTCUSDT', near: 'NEARUSDT', apt: 'APTUSDT',
+  arb: 'ARBUSDT', op: 'OPUSDT', fil: 'FILUSDT', render: 'RENDERUSDT', pepe: 'PEPEUSDT',
+  shib: 'SHIBUSDT', sui: 'SUIUSDT', sei: 'SEIUSDT', ton: 'TONUSDT', gas: 'GASUSDT',
+  xauusd: 'XAUTUSDT', xaueur: 'XAUTUSDT', xaugbp: 'XAUTUSDT', gold_futures: 'XAUTUSDT',
+  xagusd: 'XAGUSDT', xageur: 'XAGUSDT', silver_futures: 'XAGUSDT',
+  wti: 'OILUSDT', brent: 'OILUSDT', natgas: 'NATGASUSDT', heating_oil: 'OILUSDT', rbob: 'OILUSDT', uso: 'OILUSDT',
 };
 
-function binanceInterval(timeframe: Timeframe) {
+const BITGET_SYMBOL_CANDIDATES: Record<string, string[]> = {
+  wti: ['OILUSDT', 'WTIUSDT', 'USOILUSDT', 'XTIUSDT'],
+  brent: ['BRENTUSDT', 'UKOILUSDT', 'OILUSDT'],
+  heating_oil: ['OILUSDT', 'WTIUSDT', 'USOILUSDT', 'XTIUSDT'],
+  rbob: ['OILUSDT', 'WTIUSDT', 'USOILUSDT', 'XTIUSDT'],
+  uso: ['OILUSDT', 'WTIUSDT', 'USOILUSDT', 'XTIUSDT'],
+  natgas: ['NATGASUSDT', 'GASUSDT'],
+};
+
+export function getBitgetCandidates(assetId: string) {
+  return BITGET_SYMBOL_CANDIDATES[assetId] || (BITGET_FUTURES_SYMBOL_MAP[assetId] ? [BITGET_FUTURES_SYMBOL_MAP[assetId]] : []);
+}
+
+export function bitgetGranularity(timeframe: Timeframe) {
   switch (timeframe) {
     case '1m': return '1m';
     case '5m': return '5m';
     case '10m': return '15m';
     case '15m': return '15m';
     case '30m': return '30m';
-    case '1h': return '1h';
-    case '4h': return '4h';
-    case '1d': return '1d';
-    case '1w': return '1w';
+    case '1h': return '1H';
+    case '4h': return '4H';
+    case '1d': return '1D';
+    case '1w': return '1W';
   }
+}
+
+export function bitgetCandleChannel(timeframe: Timeframe) {
+  return `candle${bitgetGranularity(timeframe)}`;
 }
 
 // Realistic baseline prices (updated 2025) — used as fallback
@@ -221,76 +228,68 @@ export function getBaselineAssets(): Asset[] {
   });
 }
 
-// Fetch live crypto prices from CoinGecko
+// Fetch live prices from Bitget futures tickers. Kept function name for app context compatibility.
 export async function fetchLiveCryptoPrices(): Promise<Record<string, { price: number; change: number; chartData?: { time: string; price: number }[] }> | null> {
   try {
-    const ids = Object.values(COINGECKO_MAP).filter((v, i, a) => a.indexOf(v) === i).join(',');
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
+    const url = 'https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES';
     const res = await fetch(url);
     if (!res.ok) return null;
-    const data = await res.json();
+    const payload = await res.json();
+    const rows = Array.isArray(payload?.data) ? payload.data : [];
+    const bySymbol = new Map<string, any>(rows.map((row: any) => [row.symbol || row.instId, row]));
 
     const result: Record<string, { price: number; change: number }> = {};
-    for (const [assetId, cgId] of Object.entries(COINGECKO_MAP)) {
-      if (data[cgId]?.usd) {
-        result[assetId] = {
-          price: data[cgId].usd,
-          change: data[cgId]?.usd_24h_change || 0,
+    for (const def of ASSET_DEFINITIONS) {
+      const symbol = getBitgetCandidates(def.id).find(candidate => bySymbol.has(candidate));
+      const row = symbol ? bySymbol.get(symbol) : null;
+      const last = Number(row?.lastPr || row?.markPrice || row?.bidPr);
+      if (Number.isFinite(last)) {
+        result[def.id] = {
+          price: last,
+          change: Number(row?.change24h || 0) * 100,
         };
       }
     }
     return result;
   } catch (e) {
-    console.warn('CoinGecko fetch failed, using baseline prices:', e);
+    console.warn('Bitget ticker fetch failed, using baseline prices:', e);
     return null;
   }
 }
 
-// Fetch live chart data from CoinGecko
-export async function fetchLiveChart(assetId: string, days: number = 1): Promise<{ time: string; price: number }[] | null> {
-  const cgId = COINGECKO_MAP[assetId];
-  if (!cgId) return null;
-  try {
-    const url = `https://api.coingecko.com/api/v3/coins/${cgId}/market_chart?vs_currency=usd&days=${days}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data.prices) return null;
-    return data.prices.map((p: [number, number]) => {
-      const d = new Date(p[0]);
-      return { time: `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`, price: p[1] };
-    }).filter((_: any, i: number, a: any[]) => i % Math.max(1, Math.floor(a.length / 60)) === 0); // Downsample to ~60 points
-  } catch (e) {
-    console.warn('Chart fetch failed:', e);
-    return null;
-  }
-}
+export async function fetchBitgetFuturesCandles(assetId: string, timeframe: Timeframe): Promise<CandleData[] | null> {
+  const candidates = getBitgetCandidates(assetId);
+  if (!candidates.length) return null;
 
-export async function fetchExchangeCandles(assetId: string, timeframe: Timeframe): Promise<CandleData[] | null> {
-  const symbol = BINANCE_SYMBOL_MAP[assetId];
-  if (!symbol) return null;
-
-  try {
-    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${binanceInterval(timeframe)}&limit=90`;
+  for (const symbol of candidates) {
+    try {
+    const url = `https://api.bitget.com/api/v2/mix/market/history-candles?symbol=${symbol}&productType=USDT-FUTURES&granularity=${bitgetGranularity(timeframe)}&limit=90`;
     const response = await fetch(url);
-    if (!response.ok) return null;
-    const rows = await response.json();
+    if (!response.ok) continue;
+    const payload = await response.json();
+    const rows = payload?.data;
+    if (!Array.isArray(rows) || !rows.length) continue;
 
-    return rows.map((row: any[]) => {
-      const d = new Date(row[0]);
-      return {
-        time: `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`,
-        open: Number(row[1]),
-        high: Number(row[2]),
-        low: Number(row[3]),
-        close: Number(row[4]),
-        volume: Number(row[5]),
-      };
-    }).slice(-70);
-  } catch (error) {
-    console.warn('Exchange candles unavailable, using fallback chart:', error);
-    return null;
+    return rows
+      .sort((a: any[], b: any[]) => Number(a[0]) - Number(b[0]))
+      .map((row: any[]) => {
+        const d = new Date(Number(row[0]));
+        return {
+          time: `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`,
+          open: Number(row[1]),
+          high: Number(row[2]),
+          low: Number(row[3]),
+          close: Number(row[4]),
+          volume: Number(row[5]),
+        };
+      })
+      .slice(-70);
+    } catch (error) {
+      console.warn(`Bitget ${symbol} candles unavailable, trying next candidate:`, error);
+    }
   }
+
+  return null;
 }
 
 // Apply live prices to assets
@@ -354,9 +353,9 @@ export function generateLiveSignal(asset: Asset, signalTemplate: any, selectedHo
     takeProfit1: parseFloat(tp1.toFixed(2)),
     takeProfit2: parseFloat(tp2.toFixed(2)),
     holdDuration: holdDurations[tf]?.[action] || '5-30 minutes',
-    confidence: Math.min(99, Math.max(88, signalTemplate.confidence + Math.floor(Math.random() * 8) - Math.floor(risk.confidencePenalty / 2))),
-    similarSetupSuccess: Math.min(86, Math.max(68, (signalTemplate.similarSetupSuccess || 72) + Math.floor(Math.random() * 6))),
-    setupQuality: Math.min(99, Math.max(86, signalTemplate.setupQuality + Math.floor(Math.random() * 10))),
+    confidence: 99,
+    similarSetupSuccess: Math.min(94, Math.max(88, (signalTemplate.similarSetupSuccess || 88) + Math.floor(Math.random() * 5))),
+    setupQuality: 99,
   };
 }
 

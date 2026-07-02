@@ -3,24 +3,23 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { sampleSignals, alternativeAssets } from '../data/mockData';
 import { Market, Timeframe } from '../types';
-import { CandleData, fetchExchangeCandles, generateCandleData, generateLiveSignal } from '../services/marketService';
-import { Search, Zap, TrendingUp, TrendingDown, AlertTriangle, Shield, BarChart2, ArrowUpRight, ArrowDownRight, ChevronRight, Info, Layers, Eye, Clock, RefreshCw } from 'lucide-react';
+import { generateLiveSignal } from '../services/marketService';
+import OptionATradingViewChart from '../components/OptionATradingViewChart';
+import { Search, Zap, TrendingUp, TrendingDown, AlertTriangle, Shield, BarChart2, ChevronRight, Info, Layers, Eye, Clock } from 'lucide-react';
 
 export default function MarketsPage() {
   const { assetId } = useParams();
   const navigate = useNavigate();
-  const { useSignal, remainingSignals, user, addSignalToHistory, setShowUpgradeModal, liveAssets, isLiveLoading, lastPriceUpdate, refreshPrices } = useApp();
+  const { useSignal, remainingSignals, user, addSignalToHistory, setShowUpgradeModal, liveAssets } = useApp();
   const [activeMarket, setActiveMarket] = useState<Market>('crypto');
   const [selectedAssetId, setSelectedAssetId] = useState(assetId || 'btc');
-  const [timeframe, setTimeframe] = useState<Timeframe>('4h');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [signalState, setSignalState] = useState<'idle' | 'loading' | 'result' | 'no_signal'>('idle');
   const [loadingStep, setLoadingStep] = useState(0);
   const [currentSignal, setCurrentSignal] = useState(sampleSignals[0]);
-  const [chartData, setChartData] = useState<CandleData[] | null>(null);
-  const [chartLoading, setChartLoading] = useState(false);
   const [signalHold, setSignalHold] = useState<Timeframe>('5m');
+  const [signalPriceSnapshot, setSignalPriceSnapshot] = useState<number | null>(null);
 
   useEffect(() => { if (assetId) setSelectedAssetId(assetId); }, [assetId]);
 
@@ -31,32 +30,10 @@ export default function MarketsPage() {
     return matchMarket && matchSearch;
   });
 
-  // Fetch exchange candles when the asset or timeframe changes.
-  useEffect(() => {
-    let mounted = true;
-    setChartData(null);
-    setChartLoading(true);
-    fetchExchangeCandles(selectedAssetId, timeframe).then(data => {
-      if (mounted && data?.length) setChartData(data);
-      if (mounted) setChartLoading(false);
-    });
-    return () => { mounted = false; };
-  }, [selectedAssetId, timeframe]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      fetchExchangeCandles(selectedAssetId, timeframe).then(data => {
-        if (data?.length) setChartData(data);
-      });
-    }, 8000);
-    return () => window.clearInterval(timer);
-  }, [selectedAssetId, timeframe]);
-
-  const candleData = chartData?.length ? chartData : generateCandleData(selectedAsset.price, timeframe);
-  const currentChartPrice = candleData[candleData.length - 1]?.close || selectedAsset.price;
+  const currentChartPrice = selectedAsset.price || 0;
 
   const loadingSteps = [
-    { layer: 'L1: Market Data Engine', desc: 'Collecting live OHLCV + order book data...', detail: 'Binance, CoinGecko, Alpha Vantage' },
+    { layer: 'L1: Live Market Context', desc: 'Reading selected market, timeframe, and current setup...', detail: 'Live chart context and market structure' },
     { layer: 'L2: Technical Analysis', desc: 'Computing 30+ indicators simultaneously...', detail: 'RSI, MACD, ATR, BB, Ichimoku, ADX, OBV, VWAP' },
     { layer: 'L3: Market Regime Detection', desc: 'Classifying market state...', detail: 'Trending / Ranging / Volatile / Breakout' },
     { layer: 'L4: Signal Scoring Engine', desc: 'Multi-factor confidence scoring...', detail: 'Trend + Confirmation + Volume + Pattern + R:R' },
@@ -65,6 +42,10 @@ export default function MarketsPage() {
   ];
 
   const handleGetSignal = async () => {
+    if (!currentChartPrice) {
+      setSignalState('no_signal');
+      return;
+    }
     if (remainingSignals === 0 && user?.plan !== 'unlimited') { setShowUpgradeModal(true); return; }
     setSignalState('loading');
     setLoadingStep(0);
@@ -78,6 +59,7 @@ export default function MarketsPage() {
       const template = sampleSignals.find(s => s.assetId === selectedAssetId) || sampleSignals[Math.floor(Math.random() * sampleSignals.length)];
       const liveSignal = generateLiveSignal(selectedAsset, template, signalHold, currentChartPrice);
       setCurrentSignal(liveSignal);
+      setSignalPriceSnapshot(currentChartPrice);
       addSignalToHistory(liveSignal);
       setSignalState('result');
     } else {
@@ -92,11 +74,13 @@ export default function MarketsPage() {
     { key: 'silver', label: 'Silver', icon: '🥈' },
   ];
 
-  const timeframes: Timeframe[] = ['1m', '5m', '10m', '15m', '30m', '1h', '4h', '1d'];
   const signalHolds: Timeframe[] = ['1m', '5m', '10m', '15m', '30m', '1h', '4h', '1d'];
   const marketCounts = { crypto: liveAssets.filter(a => a.market === 'crypto').length, gold: liveAssets.filter(a => a.market === 'gold').length, oil: liveAssets.filter(a => a.market === 'oil').length, silver: liveAssets.filter(a => a.market === 'silver').length };
 
   const formatPrice = (p: number) => p < 0.001 ? p.toExponential(4) : p < 10 ? p.toFixed(4) : p.toLocaleString(undefined, { maximumFractionDigits: 3 });
+  const entryReference = currentSignal ? (currentSignal.entryZone[0] + currentSignal.entryZone[1]) / 2 : currentChartPrice;
+  const diffPct = (target: number) => Math.abs(((target - entryReference) / Math.max(entryReference, 0.000001)) * 100).toFixed(2);
+  const displayedSignalPrice = signalPriceSnapshot || currentChartPrice;
 
   return (
     <div className="space-y-0">
@@ -129,59 +113,13 @@ export default function MarketsPage() {
             className={`flex-shrink-0 px-3 py-2 rounded-xl border transition text-left min-w-[110px] ${selectedAssetId === asset.id ? 'border-cyan-500/50 bg-cyan-500/10' : 'border-gray-800 bg-gray-900/50 hover:border-gray-700'}`}>
             <p className="font-semibold text-xs">{asset.symbol}</p>
             <p className="text-[10px] text-gray-500 truncate">{asset.name}</p>
-            <p className="text-[10px] font-mono">{formatPrice(asset.price)}</p>
             <p className={`text-[10px] font-medium ${asset.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>{asset.change24h >= 0 ? '+' : ''}{asset.change24h.toFixed(2)}%</p>
           </button>
         ))}
       </div>
 
-      {/* Live Chart */}
       <div className="px-3">
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-          <div className="p-3 flex items-center justify-between">
-            <div>
-              <h3 className="font-bold">{selectedAsset.symbol}</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-mono font-bold">{formatPrice(currentChartPrice)}</span>
-                <span className={`text-xs font-semibold flex items-center gap-0.5 ${selectedAsset.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {selectedAsset.change24h >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {Math.abs(selectedAsset.change24h).toFixed(2)}%
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={refreshPrices} className="p-1.5 rounded-lg hover:bg-gray-800 transition" title="Refresh prices">
-                <RefreshCw className={`w-4 h-4 text-gray-400 ${isLiveLoading ? 'animate-spin' : ''}`} />
-              </button>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-green-500/10 border border-green-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[10px] text-green-400 font-semibold">LIVE</span>
-              </div>
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-800 text-[10px]">
-                <Layers className="w-3 h-3 text-cyan-400" />
-                <span className="text-cyan-400 font-semibold">6-Layer</span>
-              </div>
-            </div>
-          </div>
-          {lastPriceUpdate && <p className="text-[10px] text-gray-600 px-3 -mt-1 mb-1">Last update: {lastPriceUpdate.toLocaleTimeString()}</p>}
-          <div className="flex gap-1 px-3 pb-2">
-            {timeframes.map(tf => (
-              <button key={tf} onClick={() => setTimeframe(tf)} className={`px-2 py-1 rounded-lg text-xs font-medium transition ${timeframe === tf ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:bg-gray-800'}`}>{tf}</button>
-            ))}
-          </div>
-          <div className="h-[540px] bg-white">
-            {chartLoading ? (
-              <div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-gray-700 border-t-cyan-400 rounded-full animate-spin" /></div>
-            ) : (
-              <CandlestickChart data={candleData} formatPrice={formatPrice} />
-            )}
-          </div>
-          <div className="flex gap-2 p-3 border-t border-gray-800">
-            {['RSI', 'MACD', 'MA', 'VOL', 'BB', 'ICH'].map(ind => (
-              <span key={ind} className="text-[10px] font-semibold px-2 py-1 rounded-md bg-gray-800 text-gray-400 hover:text-cyan-400 cursor-pointer transition">{ind}</span>
-            ))}
-          </div>
-        </div>
+        <OptionATradingViewChart />
       </div>
 
       {/* Signal Panel */}
@@ -311,12 +249,44 @@ export default function MarketsPage() {
                 <div className="space-y-2">
                   <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Entry & Exit Zones</h4>
                   <div className="bg-gray-800/50 rounded-xl p-3 space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-gray-500">Current Chart Price</span><span className="font-mono text-white">{formatPrice(currentChartPrice)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Entry Zone <span className="text-[10px] text-gray-600">(preferred range)</span></span><span className="font-mono">{formatPrice(currentSignal.entryZone[0])} - {formatPrice(currentSignal.entryZone[1])}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Stop Loss</span><span className="font-mono text-red-400">{formatPrice(currentSignal.stopLoss)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Take Profit 1</span><span className="font-mono text-green-400">{formatPrice(currentSignal.takeProfit1)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Take Profit 2</span><span className="font-mono text-green-400">{formatPrice(currentSignal.takeProfit2)}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Risk:Reward</span><span className="font-mono text-cyan-400">1:{((currentSignal.takeProfit1 - currentSignal.entryZone[0]) / (currentSignal.entryZone[0] - currentSignal.stopLoss)).toFixed(1)}</span></div>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">Current Chart Price</span>
+                      <span className="font-mono text-white">{formatPrice(displayedSignalPrice)}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">Entry Zone</span>
+                      <span className="font-mono text-right">{formatPrice(currentSignal.entryZone[0])} - {formatPrice(currentSignal.entryZone[1])}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">Stop Loss</span>
+                      <span className="font-mono text-red-400">{formatPrice(currentSignal.stopLoss)}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">Take Profit 1</span>
+                      <span className="font-mono text-green-400">{formatPrice(currentSignal.takeProfit1)}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">Take Profit 2</span>
+                      <span className="font-mono text-green-400">{formatPrice(currentSignal.takeProfit2)}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span className="text-gray-500">Risk:Reward</span>
+                      <span className="font-mono text-cyan-400">1:{((currentSignal.takeProfit1 - currentSignal.entryZone[0]) / (currentSignal.entryZone[0] - currentSignal.stopLoss)).toFixed(1)}</span>
+                    </div>
+                    <div className="pt-2 mt-2 border-t border-gray-700 grid grid-cols-3 gap-2 text-center">
+                      <div>
+                        <p className="text-[10px] text-gray-500">SL distance</p>
+                        <p className="text-xs font-bold text-red-400">{diffPct(currentSignal.stopLoss)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500">TP1 distance</p>
+                        <p className="text-xs font-bold text-green-400">{diffPct(currentSignal.takeProfit1)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500">TP2 distance</p>
+                        <p className="text-xs font-bold text-green-400">{diffPct(currentSignal.takeProfit2)}%</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -353,7 +323,7 @@ export default function MarketsPage() {
                 </div>
               )}
 
-              <button onClick={() => setSignalState('idle')} className="w-full py-3 rounded-xl bg-gray-800 text-gray-300 font-semibold text-sm hover:bg-gray-700 transition">Analyze Another Asset</button>
+              <button onClick={() => { setSignalPriceSnapshot(null); setSignalState('idle'); }} className="w-full py-3 rounded-xl bg-gray-800 text-gray-300 font-semibold text-sm hover:bg-gray-700 transition">Analyze Another Asset</button>
             </div>
           </div>
         )}
@@ -401,71 +371,6 @@ export default function MarketsPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function CandlestickChart({ data, formatPrice }: { data: CandleData[]; formatPrice: (price: number) => string }) {
-  const width = 760;
-  const height = 540;
-  const rightAxis = 118;
-  const chartWidth = width - rightAxis;
-  const chartHeight = 415;
-  const volumeTop = 428;
-  const volumeHeight = 96;
-  const paddingTop = 16;
-  const values = data.flatMap(candle => [candle.high, candle.low]);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = Math.max(max - min, 0.000001);
-  const maxVolume = Math.max(...data.map(candle => candle.volume), 1);
-  const current = data[data.length - 1]?.close || 0;
-  const yFor = (price: number) => paddingTop + ((max - price) / range) * (chartHeight - paddingTop - 12);
-  const xStep = chartWidth / data.length;
-  const candleWidth = Math.max(3, Math.min(9, xStep * 0.62));
-  const currentY = yFor(current);
-  const axisTicks = Array.from({ length: 10 }, (_, i) => max - (range / 9) * i);
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full bg-white" preserveAspectRatio="none">
-      <rect x="0" y="0" width={width} height={height} fill="#ffffff" />
-      {axisTicks.map((tick, index) => {
-        const y = yFor(tick);
-        return (
-          <g key={index}>
-            <line x1="0" y1={y} x2={chartWidth} y2={y} stroke="#ececec" strokeWidth="1" />
-            <text x={chartWidth + 14} y={y + 5} fill="#111827" fontSize="15" fontWeight={index % 2 === 0 ? 700 : 400}>
-              {formatPrice(tick)}
-            </text>
-          </g>
-        );
-      })}
-      {Array.from({ length: 8 }, (_, index) => (
-        <line key={index} x1={(chartWidth / 7) * index} y1="0" x2={(chartWidth / 7) * index} y2={height} stroke="#f0f0f0" strokeWidth="1" />
-      ))}
-      {data.map((candle, index) => {
-        const x = index * xStep + xStep / 2;
-        const up = candle.close >= candle.open;
-        const color = up ? '#089981' : '#f23645';
-        const bodyTop = yFor(Math.max(candle.open, candle.close));
-        const bodyBottom = yFor(Math.min(candle.open, candle.close));
-        const bodyHeight = Math.max(2, bodyBottom - bodyTop);
-        const volumeHeightPx = (candle.volume / maxVolume) * volumeHeight;
-
-        return (
-          <g key={`${candle.time}-${index}`}>
-            <line x1={x} y1={yFor(candle.high)} x2={x} y2={yFor(candle.low)} stroke={color} strokeWidth="1.4" />
-            <rect x={x - candleWidth / 2} y={bodyTop} width={candleWidth} height={bodyHeight} fill={color} />
-            <rect x={x - candleWidth / 2} y={volumeTop + (volumeHeight - volumeHeightPx)} width={candleWidth} height={volumeHeightPx} fill={up ? '#7fcac3' : '#f6a2a8'} opacity="0.88" />
-          </g>
-        );
-      })}
-      <line x1="0" y1={currentY} x2={chartWidth} y2={currentY} stroke="#f23645" strokeWidth="1" strokeDasharray="2 5" />
-      <rect x={chartWidth + 4} y={currentY - 19} width="106" height="38" rx="2" fill="#f23645" />
-      <text x={chartWidth + 13} y={currentY - 2} fill="white" fontSize="17" fontWeight="600">{formatPrice(current)}</text>
-      <text x={chartWidth + 13} y={currentY + 14} fill="white" fontSize="13">00:14</text>
-      <rect x={chartWidth + 4} y={volumeTop + volumeHeight - 24} width="78" height="22" rx="2" fill="#f23645" />
-      <text x={chartWidth + 18} y={volumeTop + volumeHeight - 8} fill="white" fontSize="16">110</text>
-    </svg>
   );
 }
 

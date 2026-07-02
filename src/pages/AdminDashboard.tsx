@@ -153,9 +153,45 @@ function OverviewTab() {
 }
 
 function UsersTab({ search, setSearch }: { search: string; setSearch: (s: string) => void }) {
-  const filtered = search ? mockUsers.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())) : mockUsers;
+  const [users, setUsers] = useState(mockUsers.map((user, index) => ({
+    ...user,
+    credits: user.plan === 'unlimited' ? -1 : Math.max(0, 120 - index * 9),
+    expiresAt: user.plan === 'free' ? 'No expiry' : new Date(Date.now() + (index + 5) * 86400000).toISOString().slice(0, 10),
+  })));
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserPlan, setNewUserPlan] = useState('free');
+  const filtered = search ? users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase())) : users;
+  const updateUser = (id: string, patch: Partial<typeof users[number]>) => setUsers(prev => prev.map(user => user.id === id ? { ...user, ...patch } : user));
+  const createUser = () => {
+    if (!newUserEmail || !newUserName) return;
+    setUsers(prev => [{
+      id: `admin-created-${Date.now()}`,
+      name: newUserName,
+      email: newUserEmail,
+      plan: newUserPlan,
+      signals: 0,
+      credits: newUserPlan === 'unlimited' ? -1 : newUserPlan === 'pro' ? 120 : newUserPlan === 'active' ? 25 : newUserPlan === 'starter' ? 12 : 3,
+      expiresAt: newUserPlan === 'free' ? 'No expiry' : new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+      country: 'Manual',
+      status: 'active',
+    }, ...prev]);
+    setNewUserEmail('');
+    setNewUserName('');
+  };
   return (
     <div className="space-y-4">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <h3 className="font-bold text-sm mb-3">Master User Controls</h3>
+        <div className="grid gap-2 md:grid-cols-[1fr_1fr_160px_120px]">
+          <input value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="Full name" className="rounded-xl bg-gray-800 border border-gray-700 px-3 py-2 text-sm outline-none focus:border-cyan-500" />
+          <input value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="email@example.com" className="rounded-xl bg-gray-800 border border-gray-700 px-3 py-2 text-sm outline-none focus:border-cyan-500" />
+          <select value={newUserPlan} onChange={e => setNewUserPlan(e.target.value)} className="rounded-xl bg-gray-800 border border-gray-700 px-3 py-2 text-sm outline-none focus:border-cyan-500">
+            {['free', 'starter', 'active', 'pro', 'unlimited'].map(plan => <option key={plan} value={plan}>{plan}</option>)}
+          </select>
+          <button onClick={createUser} className="rounded-xl bg-cyan-500 px-3 py-2 text-sm font-bold text-gray-950">Create User</button>
+        </div>
+      </div>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users..." className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-sm text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none" />
@@ -171,10 +207,13 @@ function UsersTab({ search, setSearch }: { search: string; setSearch: (s: string
               </div>
               <ChevronRight className="w-4 h-4 text-gray-600 flex-shrink-0" />
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-2">
+            <div className="mt-2 grid grid-cols-2 md:grid-cols-6 gap-2">
               <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Plan</p><p className="text-xs font-semibold capitalize">{u.plan}</p></div>
               <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Signals</p><p className="text-xs font-semibold">{u.signals}</p></div>
-              <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Actions</p><div className="flex gap-1 justify-center"><button className="text-[10px] text-cyan-400">Edit</button><button className="text-[10px] text-red-400">Ban</button></div></div>
+              <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Credits</p><input type="number" value={u.credits} onChange={e => updateUser(u.id, { credits: Number(e.target.value) })} className="w-full bg-transparent text-center text-xs font-semibold outline-none" /></div>
+              <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Expiry</p><input value={u.expiresAt} onChange={e => updateUser(u.id, { expiresAt: e.target.value })} className="w-full bg-transparent text-center text-[10px] font-semibold outline-none" /></div>
+              <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Plan</p><select value={u.plan} onChange={e => updateUser(u.id, { plan: e.target.value })} className="w-full bg-transparent text-center text-[10px] font-semibold outline-none"><option>free</option><option>starter</option><option>active</option><option>pro</option><option>unlimited</option></select></div>
+              <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Actions</p><div className="flex gap-1 justify-center"><button onClick={() => updateUser(u.id, { credits: u.credits === -1 ? 25 : u.credits + 10 })} className="text-[10px] text-cyan-400">+10</button><button onClick={() => updateUser(u.id, { status: u.status === 'active' ? 'suspended' : 'active' })} className="text-[10px] text-red-400">{u.status === 'active' ? 'Ban' : 'Unban'}</button></div></div>
             </div>
           </div>
         ))}
