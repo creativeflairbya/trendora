@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Zap, BarChart3, Shield, Globe, ChevronRight, Star, TrendingUp, Lock, ArrowRight, CheckCircle } from 'lucide-react';
 import { plans, faqs } from '../data/mockData';
 import { useState } from 'react';
-import OptionATradingViewChart from '../components/OptionATradingViewChart';
+import AIChartImageAnalyzer from '../components/AIChartImageAnalyzer';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -121,7 +121,7 @@ export default function LandingPage() {
             <p className="text-gray-400">Real analysis, real confidence scores, real alternatives</p>
           </div>
           <div className="space-y-4">
-            <OptionATradingViewChart />
+            <AIChartImageAnalyzer compact onAnalyze={() => {}} />
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-gray-800/50 rounded-xl p-3 text-center">
