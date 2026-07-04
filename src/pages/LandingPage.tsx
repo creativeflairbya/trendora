@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { Zap, BarChart3, Shield, Globe, ChevronRight, Star, TrendingUp, Lock, ArrowRight, CheckCircle } from 'lucide-react';
 import { plans, faqs } from '../data/mockData';
 import { useState } from 'react';
-import AIChartImageAnalyzer from '../components/AIChartImageAnalyzer';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -19,7 +18,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-xl bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Trendora</span>
+            <span className="font-bold text-xl bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">SignalAnalyst AI</span>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/login')} className="text-sm text-gray-300 hover:text-white transition px-3 py-2">Log In</button>
@@ -43,7 +42,7 @@ export default function LandingPage() {
             <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">Simple Decisions.</span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-            Trendora uses a 6-layer hybrid engine to analyze crypto, gold, oil, and silver with 30+ indicators, live market data, and confidence-based AI signals.
+            SignalAnalyst AI uses a 6-layer hybrid engine to analyze crypto, gold, oil, and silver with 30+ indicators, chart-image analysis, and confidence-based AI signals.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <button onClick={() => navigate('/signup')} className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25">
@@ -113,50 +112,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Signal Preview */}
-      <section className="py-20 px-4 bg-gradient-to-b from-gray-900/50 to-transparent">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">See What a Signal Looks Like</h2>
-            <p className="text-gray-400">Real analysis, real confidence scores, real alternatives</p>
-          </div>
-          <div className="space-y-4">
-            <AIChartImageAnalyzer compact onAnalyze={() => {}} />
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 mb-1">Confidence</p>
-                  <p className="text-2xl font-bold text-cyan-400">99%</p>
-                </div>
-                <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 mb-1">Success Rate</p>
-                  <p className="text-2xl font-bold text-green-400">92%</p>
-                </div>
-                <div className="bg-gray-800/50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 mb-1">Risk Level</p>
-                  <p className="text-2xl font-bold text-amber-400">Med</p>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Entry Zone</span><span className="font-mono">Live chart price zone</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Stop Loss</span><span className="font-mono text-red-400">Dynamic by hold time</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Take Profit 1</span><span className="font-mono text-green-400">Dynamic target</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Take Profit 2</span><span className="font-mono text-green-400">Macro target</span></div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-3">
-                <p className="text-xs text-gray-500 mb-1">AI Explanation</p>
-                <p className="text-sm text-gray-300">Trendora uses the selected live market chart, holding period, candle confirmation, volatility, and risk filters before showing the signal.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Trendora */}
+      {/* Why SignalAnalyst AI */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why Trendora is Different</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why SignalAnalyst AI is Different</h2>
           <p className="text-gray-400">Live data, disciplined signal filters, and clear risk scoring.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
@@ -165,7 +125,7 @@ export default function LandingPage() {
               { icon: '🛡️', title: 'Says "No Signal" When Needed', desc: 'We tell you when to wait. That restraint improves trust and your outcomes — unlike tools that force signals.' },
               { icon: '📊', title: 'Real-Time Market View', desc: 'Analyze live-style candles across 40+ assets with multiple timeframes and hold settings.' },
               { icon: '🔄', title: 'Safer Alternatives', desc: 'No strong setup? Our L6 engine suggests better opportunities across all markets with confidence scores.' },
-              { icon: '🌐', title: '13 Languages + Local Payments', desc: 'Use Trendora in your language. Pay with Easypaisa, JazzCash, UPI, Pix, Binance Pay, and 25+ methods.' },
+              { icon: '🌐', title: '13 Languages + Local Payments', desc: 'Use SignalAnalyst AI in your language. Pay with Easypaisa, JazzCash, UPI, Pix, Binance Pay, and 25+ methods.' },
               { icon: '🔒', title: 'Security-First + Honest', desc: 'Encrypted, monitored, hardened. Three separate accuracy metrics — not fake "99%" claims.' },
             ].map(item => (
               <div key={item.title} className="p-5 rounded-2xl bg-gray-900/50 border border-gray-800 hover:border-cyan-500/30 transition">
@@ -317,7 +277,7 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-500/5" />
             <div className="relative">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready for Better Signals?</h2>
-              <p className="text-gray-400 mb-8 max-w-lg mx-auto">Join thousands of traders who trust Trendora for honest, confidence-based AI signals across crypto, gold, oil, and silver.</p>
+              <p className="text-gray-400 mb-8 max-w-lg mx-auto">Join traders who trust SignalAnalyst AI for confidence-based AI signals across crypto, gold, oil, and silver.</p>
               <button onClick={() => navigate('/signup')} className="px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg hover:opacity-90 transition inline-flex items-center gap-2 shadow-lg shadow-cyan-500/25">
                 Get Started Free <ArrowRight className="w-5 h-5" />
               </button>
@@ -335,7 +295,7 @@ export default function LandingPage() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
                 <Zap className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-lg bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Trendora</span>
+              <span className="font-bold text-lg bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">SignalAnalyst AI</span>
             </div>
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-gray-500" />
@@ -381,7 +341,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-800/50 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-gray-600">© 2024 Trendora. All rights reserved.</p>
+            <p className="text-xs text-gray-600">© 2024 SignalAnalyst AI. All rights reserved.</p>
             <p className="text-xs text-gray-600">⚠️ Trading involves risk. Signals are for informational purposes only. Not financial advice.</p>
           </div>
         </div>

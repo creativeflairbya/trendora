@@ -126,7 +126,7 @@ export default function AccountPage() {
         </button>
       </div>
 
-      <p className="text-center text-xs text-gray-600 pb-4">Trendora v1.0.0 · Security-First Architecture</p>
+      <p className="text-center text-xs text-gray-600 pb-4">SignalAnalyst AI v1.0.0 · Security-First Architecture</p>
 
       {/* Language Modal */}
       {showLangModal && (

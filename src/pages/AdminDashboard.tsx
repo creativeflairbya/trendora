@@ -315,7 +315,7 @@ function ContentTab() {
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
         <h3 className="font-bold text-sm mb-3">Content Management</h3>
         <div className="space-y-2">
-          {[{label:'Hero Text',value:'AI Signals. Simple Decisions.'},{label:'Subheading',value:'Trendora helps everyday users...'},{label:'Announcement Bar',value:'🔥 6-Layer Engine: 79% avg confidence'},{label:'Promo Banner',value:'Limited: 20% off Pro plan'}].map(item=>(
+          {[{label:'Hero Text',value:'AI Signals. Simple Decisions.'},{label:'Subheading',value:'SignalAnalyst AI helps everyday users...'},{label:'Announcement Bar',value:'🔥 6-Layer Engine: 79% avg confidence'},{label:'Promo Banner',value:'Limited: 20% off Pro plan'}].map(item=>(
             <div key={item.label} className="bg-gray-800/50 rounded-lg p-3">
               <div className="flex items-center justify-between"><span className="text-sm font-medium">{item.label}</span><button className="text-xs text-cyan-400">Edit</button></div>
               <p className="text-xs text-gray-400 mt-1">{item.value}</p>
@@ -437,7 +437,7 @@ function SecurityTab() {
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
         <h3 className="font-bold text-sm mb-3">Audit Log</h3>
         <div className="space-y-1 text-xs">
-          {[{a:'Updated payment method config',b:'admin@trendora.com',t:'5 min ago'},{a:'User suspended: john@example.com',b:'admin@trendora.com',t:'30 min ago'},{a:'Signal threshold updated to 60%',b:'admin@trendora.com',t:'1h ago'},{a:'Easypaisa gateway enabled',b:'admin@trendora.com',t:'2h ago'},{a:'Coupon SAVE20 created',b:'admin@trendora.com',t:'3h ago'}].map((log,i)=>(
+          {[{a:'Updated payment method config',b:'admin@signalanalyst.ai',t:'5 min ago'},{a:'User suspended: john@example.com',b:'admin@signalanalyst.ai',t:'30 min ago'},{a:'Signal threshold updated to 60%',b:'admin@signalanalyst.ai',t:'1h ago'},{a:'Easypaisa gateway enabled',b:'admin@signalanalyst.ai',t:'2h ago'},{a:'Coupon SAVE20 created',b:'admin@signalanalyst.ai',t:'3h ago'}].map((log,i)=>(
             <div key={i} className="flex items-center gap-2 p-2 rounded bg-gray-800/30">
               <Eye className="w-3 h-3 text-gray-500"/><span className="text-gray-300 flex-1">{log.a}</span><span className="text-gray-600">{log.t}</span>
             </div>

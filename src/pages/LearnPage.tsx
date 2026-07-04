@@ -66,7 +66,7 @@ export default function LearnPage() {
           {[
             'Always check the confidence score before acting on a signal',
             'Use stop-losses — they protect your capital when markets move against you',
-            'When Trendora says "No Signal", it means patience is the best trade',
+            'When SignalAnalyst AI says "No Signal", it means patience is the best trade',
             'Start with the Free plan to understand how signals work',
             'Multi-timeframe analysis gives you a bigger picture view',
             'Never risk more than you can afford to lose on a single trade',

@@ -23,6 +23,10 @@ interface AIChartImageAnalyzerProps {
   compact?: boolean;
   onAnalyze: (analysis: ChartImageAnalysis) => void;
   disabled?: boolean;
+  defaultSymbol?: string;
+  defaultAssetName?: string;
+  defaultMarket?: Market;
+  defaultPrice?: number;
 }
 
 const symbols = [
@@ -42,31 +46,63 @@ function hashText(text: string) {
   return Array.from(text).reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
 
+function parseNumber(value: string) {
+  return Number(value.replace(/,/g, '').replace(/\s/g, ''));
+}
+
 function extractBestPrice(text: string, fallback: number) {
-  const normalized = text.replace(/O\s/gi, 'O ').replace(/C\s/gi, 'C ').replace(/H\s/gi, 'H ').replace(/L\s/gi, 'L ');
-  const closeMatch = normalized.match(/(?:C|Close|Last)\s*[:=]?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]{3,6}(?:\.[0-9]+)?)/i);
+  const normalized = text
+    .replace(/[|]/g, ' ')
+    .replace(/([OHLC])\s*[.:=]?\s*/gi, ' $1 ')
+    .replace(/close/gi, ' C ')
+    .replace(/last/gi, ' C ');
+
+  const ohlcLine = normalized
+    .split('\n')
+    .find(line => /\bO\b/i.test(line) && /\bC\b/i.test(line) && /\bH\b/i.test(line) && /\bL\b/i.test(line));
+
+  const closeMatch = (ohlcLine || normalized).match(/\bC\b\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]{2,6}(?:\.[0-9]+)?)/i);
   const direct = closeMatch?.[1];
   if (direct) {
-    const parsed = Number(direct.replace(/,/g, ''));
+    const parsed = parseNumber(direct);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
   }
 
+  const ohlcNumbers = ohlcLine
+    ? Array.from(ohlcLine.matchAll(/([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]{2,6}(?:\.[0-9]+)?)/g)).map(match => parseNumber(match[1]))
+    : [];
+
+  if (ohlcNumbers.length >= 4) {
+    const closeLike = ohlcNumbers[1];
+    if (Number.isFinite(closeLike) && closeLike > 0) return closeLike;
+  }
+
   const candidates = Array.from(text.matchAll(/([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]+)?|[0-9]{3,6}(?:\.[0-9]{1,4}))/g))
-    .map(match => Number(match[1].replace(/,/g, '')))
+    .map(match => parseNumber(match[1]))
     .filter(value => Number.isFinite(value) && value > 0);
 
   if (!candidates.length) return fallback;
-  return candidates.reduce((best, value) => Math.abs(value - fallback) < Math.abs(best - fallback) ? value : best, candidates[0]);
+
+  const nonRound = candidates.filter(value => Math.abs(value - Math.round(value)) > 0.001);
+  const pool = nonRound.length ? nonRound : candidates;
+  const reasonable = pool.filter(value => value > fallback * 0.75 && value < fallback * 1.35);
+  const finalPool = reasonable.length ? reasonable : pool;
+  return finalPool[Math.floor(finalPool.length / 2)] || fallback;
 }
 
-function detectSymbolFromText(text: string, file: File) {
-  const source = `${file.name} ${text}`.toLowerCase();
-  return symbols.find(item => item.match.some(token => source.includes(token))) || symbols[0];
+function detectSymbolFromText(text: string, file: File, fallback?: { symbol?: string; assetName?: string; market?: Market; price?: number }) {
+  const source = `${file.name} ${text}`.toLowerCase().replace(/[^a-z0-9/]/g, '');
+  const detected = symbols.find(item => item.match.some(token => source.includes(token.replace(/[^a-z0-9/]/g, ''))));
+  if (detected) return detected;
+  if (fallback?.symbol && fallback?.assetName && fallback?.market && fallback?.price) {
+    return { match: [], symbol: fallback.symbol, assetName: fallback.assetName, market: fallback.market, price: fallback.price };
+  }
+  return symbols[0];
 }
 
-function detectFromFile(file: File, ocrText = ''): ChartImageAnalysis {
+function detectFromFile(file: File, ocrText = '', fallback?: { symbol?: string; assetName?: string; market?: Market; price?: number }): ChartImageAnalysis {
   const name = file.name.toLowerCase();
-  const selected = detectSymbolFromText(ocrText, file);
+  const selected = detectSymbolFromText(ocrText, file, fallback);
   const seed = hashText(`${file.name}-${file.size}-${file.lastModified}`);
   const tfMatch = `${name} ${ocrText}`.toLowerCase().match(/\b(1m|5m|10m|15m|30m|1h|4h|1d)\b/);
   const timeframe = (tfMatch?.[1] as Timeframe) || timeframes[seed % timeframes.length];
@@ -99,7 +135,7 @@ function detectFromFile(file: File, ocrText = ''): ChartImageAnalysis {
   };
 }
 
-export default function AIChartImageAnalyzer({ compact = false, onAnalyze, disabled }: AIChartImageAnalyzerProps) {
+export default function AIChartImageAnalyzer({ compact = false, onAnalyze, disabled, defaultSymbol, defaultAssetName, defaultMarket, defaultPrice }: AIChartImageAnalyzerProps) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -107,7 +143,7 @@ export default function AIChartImageAnalyzer({ compact = false, onAnalyze, disab
 
   const helperText = useMemo(() => {
     if (!file) return 'Upload a clear chart screenshot from Bitget, Binance, TradingView, MT4/MT5, or your broker.';
-    return 'Ready. Trendora AI will read the chart image and generate the futures setup.';
+    return 'Ready. SignalAnalyst AI will read the chart image and generate the futures setup.';
   }, [file]);
 
   const handleFile = (nextFile: File | undefined) => {
@@ -129,7 +165,7 @@ export default function AIChartImageAnalyzer({ compact = false, onAnalyze, disab
     } catch (error) {
       console.warn('OCR extraction failed, using visual fallback:', error);
     }
-    const analysis = detectFromFile(file, text);
+    const analysis = detectFromFile(file, text, { symbol: defaultSymbol, assetName: defaultAssetName, market: defaultMarket, price: defaultPrice });
     setLastAnalysis(analysis);
     onAnalyze(analysis);
     setIsAnalyzing(false);

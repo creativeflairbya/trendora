@@ -158,6 +158,10 @@ export default function MarketsPage() {
 
       <div className="px-3">
         <AIChartImageAnalyzer
+          defaultSymbol={selectedAsset.symbol}
+          defaultAssetName={selectedAsset.name}
+          defaultMarket={selectedAsset.market}
+          defaultPrice={selectedAsset.price}
           onAnalyze={analysis => {
             setChartAnalysis(analysis);
             const matchingAsset = liveAssets.find(asset => asset.symbol === analysis.symbol || asset.name === analysis.assetName);

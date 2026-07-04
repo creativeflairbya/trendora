@@ -25,7 +25,7 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
       if (success) {
         navigate('/dashboard');
       } else {
-        setError('Invalid email or password. Try admin@trendora.com / Trendora2024!');
+        setError('Invalid email or password. Try admin@signalanalyst.ai / SignalAnalyst2024!');
       }
     } else {
       if (!name.trim()) { setError('Name is required'); setLoading(false); return; }
@@ -53,7 +53,7 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <span className="font-bold text-2xl bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Trendora</span>
+            <span className="font-bold text-2xl bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">SignalAnalyst AI</span>
           </div>
           <h1 className="text-2xl font-bold mb-2">{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h1>
           <p className="text-gray-400 text-sm">
@@ -110,7 +110,7 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
         {/* Master account hint */}
         <div className="mt-4 bg-gray-900/50 border border-gray-800 rounded-xl p-4 text-center">
           <p className="text-xs text-gray-500 mb-1">🔥 Demo Master Account</p>
-          <p className="text-xs text-gray-400 font-mono">admin@trendora.com / Trendora2024!</p>
+          <p className="text-xs text-gray-400 font-mono">admin@signalanalyst.ai / SignalAnalyst2024!</p>
           <p className="text-xs text-gray-600 mt-1">Full unlimited access + Admin panel</p>
         </div>
       </div>

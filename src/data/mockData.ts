@@ -179,14 +179,14 @@ export const plans: Plan[] = [
 ];
 
 export const faqs: FAQ[] = [
-  { id: '1', question: 'How does Trendora generate signals?', answer: 'Trendora uses a 6-layer hybrid engine: live market data, 30+ technical indicators, market regime detection, multi-factor signal scoring, AI-powered explanations, and cross-asset opportunity ranking.', category: 'Signals' },
-  { id: '2', question: 'How accurate are Trendora signals?', answer: 'Each signal shows setup confidence, historical success rate for similar setups, and risk level. The system is designed to filter weak setups and only show higher-quality opportunities instead of forcing a trade.', category: 'Signals' },
-  { id: '3', question: 'What markets does Trendora support?', answer: 'We support 40+ assets across 4 markets: Crypto (BTC, ETH, SOL, BNB, GAS tokens, and 20+ altcoins), Gold (XAU/USD, XAU/EUR, XAU/GBP, Gold Futures), Silver (XAG/USD, XAG/EUR, Silver Futures), and Oil/Energy (WTI, Brent, Natural Gas, Heating Oil, RBOB Gasoline).', category: 'General' },
+  { id: '1', question: 'How does SignalAnalyst AI generate signals?', answer: 'SignalAnalyst AI uses a 6-layer hybrid engine: chart-image analysis, 30+ technical indicators, market regime detection, multi-factor signal scoring, AI-powered explanations, and cross-asset opportunity ranking.', category: 'Signals' },
+  { id: '2', question: 'How accurate are SignalAnalyst AI signals?', answer: 'Each signal shows setup confidence, historical success rate for similar setups, and risk level. The system is designed to filter weak setups and only show higher-quality opportunities instead of forcing a trade.', category: 'Signals' },
+  { id: '3', question: 'What markets does SignalAnalyst AI support?', answer: 'We support 40+ assets across 4 markets: Crypto (BTC, ETH, SOL, BNB, GAS tokens, and 20+ altcoins), Gold (XAU/USD, XAU/EUR, XAU/GBP, Gold Futures), Silver (XAG/USD, XAG/EUR, Silver Futures), and Oil/Energy (WTI, Brent, Natural Gas, Heating Oil, RBOB Gasoline).', category: 'General' },
   { id: '4', question: 'What happens if no signal is available?', answer: 'When conditions don\'t meet our high threshold, we honestly tell you "No strong setup right now" and suggest alternative assets with better confidence scores across all markets. This restraint improves trust and your outcomes.', category: 'Signals' },
-  { id: '5', question: 'Can I use Trendora as a beginner?', answer: 'Absolutely! Trendora provides simple explanations for every signal, a learning section with 8 modules, and guided onboarding. Our beginner mode explains everything in plain language with risk warnings.', category: 'Getting Started' },
+  { id: '5', question: 'Can I use SignalAnalyst AI as a beginner?', answer: 'Absolutely! SignalAnalyst AI provides simple explanations for every signal, a learning section with 8 modules, and guided onboarding. Our beginner mode explains everything in plain language with risk warnings.', category: 'Getting Started' },
   { id: '6', question: 'How do signal credits work?', answer: 'Each AI signal request uses one credit. Free users get 3 total credits. Paid plans offer 12-120 credits or unlimited. Credits are valid for the plan period. The Unlimited plan has no limits with fair-use protection.', category: 'Billing' },
   { id: '7', question: 'What payment methods do you accept?', answer: 'International: Visa, Mastercard, Apple Pay, Google Pay, PayPal. Regional: Easypaisa, JazzCash, Bank Transfer, Paymob. Crypto: USDT (TRC-20/ERC-20), Binance Pay. We support 15+ payment methods across 50+ countries.', category: 'Billing' },
-  { id: '8', question: 'Is my data secure?', answer: 'Trendora uses security-first architecture: TLS 1.3 encryption, WAF protection, rate limiting, CSRF/XSS/SQLi protection, 2FA for admins, encrypted session management, and audit logging. We never store raw card data.', category: 'Security' },
+  { id: '8', question: 'Is my data secure?', answer: 'SignalAnalyst AI uses security-first architecture: TLS 1.3 encryption, WAF protection, rate limiting, CSRF/XSS/SQLi protection, 2FA for admins, encrypted session management, and audit logging. We never store raw card data.', category: 'Security' },
 ];
 
 export const adminStats: AdminStats = {
@@ -233,7 +233,7 @@ export const supportedLanguages = [
 ];
 
 export const learningModules = [
-  { id: '1', title: 'Understanding the 6-Layer Engine', description: 'How Trendora\'s hybrid system outperforms single-indicator tools', duration: '8 min read', category: 'Basics', icon: '🧠' },
+  { id: '1', title: 'Understanding the 6-Layer Engine', description: 'How SignalAnalyst AI\'s hybrid system outperforms single-indicator tools', duration: '8 min read', category: 'Basics', icon: '🧠' },
   { id: '2', title: 'Reading Confidence Scores', description: 'What 94% confidence means vs 65% — and how to act on each', duration: '5 min read', category: 'Basics', icon: '📊' },
   { id: '3', title: 'Risk Management Masterclass', description: 'Stop-losses, position sizing, and capital preservation strategies', duration: '10 min read', category: 'Risk', icon: '🛡️' },
   { id: '4', title: 'Market Regimes Explained', description: 'Trending, ranging, volatile, and uncertain — how to adapt your strategy', duration: '7 min read', category: 'Advanced', icon: '📈' },

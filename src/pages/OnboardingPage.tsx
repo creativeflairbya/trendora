@@ -8,7 +8,7 @@ const slides = [
   { emoji: '📊', title: 'AI-Powered Signals', desc: 'Get confidence-based trading signals for crypto, gold, oil, and silver — powered by a hybrid engine of technical analysis and AI.' },
   { emoji: '🛡️', title: 'Honest & Transparent', desc: 'We tell you when there\'s no safe setup. Our system prioritizes your safety over generating forced signals.' },
   { emoji: '🔄', title: 'Safer Alternatives', desc: 'When a specific asset has no clear setup, we suggest better opportunities with higher confidence scores.' },
-  { emoji: '🌐', title: 'Your Language', desc: 'Use Trendora in your preferred language. Signals, explanations, and the entire experience — localized for you.' },
+  { emoji: '🌐', title: 'Your Language', desc: 'Use SignalAnalyst AI in your preferred language. Signals, explanations, and the entire experience — localized for you.' },
 ];
 
 export default function OnboardingPage() {
