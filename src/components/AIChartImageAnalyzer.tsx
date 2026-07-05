@@ -61,11 +61,15 @@ function extractBestPrice(text: string, fallback: number) {
     .split('\n')
     .find(line => /\bO\b/i.test(line) && /\bC\b/i.test(line) && /\bH\b/i.test(line) && /\bL\b/i.test(line));
 
-  const closeMatch = (ohlcLine || normalized).match(/\bC\b\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]{2,6}(?:\.[0-9]+)?)/i);
+  const lowerBound = fallback > 0 ? fallback * 0.35 : 0;
+  const upperBound = fallback > 0 ? fallback * 2.5 : Number.POSITIVE_INFINITY;
+  const isReasonable = (value: number) => Number.isFinite(value) && value > 0 && value >= lowerBound && value <= upperBound;
+
+  const closeMatch = (ohlcLine || normalized).match(/(?:^|[^A-Z])C\s*([0-9]{1,3}(?:[,.\s][0-9]{3})*(?:\.[0-9]+)?|[0-9]{2,6}(?:\.[0-9]+)?)/i);
   const direct = closeMatch?.[1];
   if (direct) {
     const parsed = parseNumber(direct);
-    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    if (isReasonable(parsed)) return parsed;
   }
 
   const ohlcNumbers = ohlcLine
@@ -74,20 +78,48 @@ function extractBestPrice(text: string, fallback: number) {
 
   if (ohlcNumbers.length >= 4) {
     const closeLike = ohlcNumbers[1];
-    if (Number.isFinite(closeLike) && closeLike > 0) return closeLike;
+    if (isReasonable(closeLike)) return closeLike;
   }
 
-  const candidates = Array.from(text.matchAll(/([0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]+)?|[0-9]{3,6}(?:\.[0-9]{1,4}))/g))
+  const lastPriceLine = text
+    .split('\n')
+    .find(line => /last\s*price|market\s*trades|order\s*book/i.test(line));
+
+  if (lastPriceLine) {
+    const linePrices = Array.from(lastPriceLine.matchAll(/([0-9]{1,3}(?:[,.\s][0-9]{3})+(?:\.[0-9]+)?|[0-9]{3,6}(?:\.[0-9]{1,4}))/g))
+      .map(match => parseNumber(match[1]))
+      .filter(isReasonable);
+    if (linePrices.length) return linePrices[0];
+  }
+
+  const candidates = Array.from(text.matchAll(/([0-9]{1,3}(?:[,.\s][0-9]{3})+(?:\.[0-9]+)?|[0-9]{3,6}(?:\.[0-9]{1,4}))/g))
     .map(match => parseNumber(match[1]))
-    .filter(value => Number.isFinite(value) && value > 0);
+    .filter(isReasonable);
 
   if (!candidates.length) return fallback;
+
+  const clustered = new Map<number, number[]>();
+  for (const value of candidates) {
+    const key = Math.round(value);
+    const list = clustered.get(key) || [];
+    list.push(value);
+    clustered.set(key, list);
+  }
+
+  const clusters = Array.from(clustered.entries())
+    .map(([key, values]) => ({ key, values, count: values.length, median: values.slice().sort((a, b) => a - b)[Math.floor(values.length / 2)] }))
+    .sort((a, b) => b.count - a.count || b.median - a.median);
+
+  const repeatedCluster = clusters.find(cluster => cluster.count >= 2);
+  if (repeatedCluster) return repeatedCluster.median;
 
   const nonRound = candidates.filter(value => Math.abs(value - Math.round(value)) > 0.001);
   const pool = nonRound.length ? nonRound : candidates;
   const reasonable = pool.filter(value => value > fallback * 0.75 && value < fallback * 1.35);
   const finalPool = reasonable.length ? reasonable : pool;
-  return finalPool[Math.floor(finalPool.length / 2)] || fallback;
+  const upperHalf = finalPool.filter(value => value >= fallback);
+  const finalCandidates = upperHalf.length ? upperHalf : finalPool;
+  return finalCandidates.reduce((best, value) => Math.abs(value - fallback) < Math.abs(best - fallback) ? value : best, finalCandidates[0]) || fallback;
 }
 
 function detectSymbolFromText(text: string, file: File, fallback?: { symbol?: string; assetName?: string; market?: Market; price?: number }) {
@@ -110,7 +142,8 @@ function detectFromFile(file: File, ocrText = '', fallback?: { symbol?: string; 
   const directionScore = (seed % 100) - 50;
   const direction = directionScore >= 0 ? 'buy' : 'sell';
   const volatility = seed % 3;
-  const detectedPrice = extractBestPrice(ocrText, selected.price);
+  const basePrice = fallback?.price && selected.symbol === fallback.symbol ? fallback.price : selected.price;
+  const detectedPrice = extractBestPrice(ocrText, basePrice);
   const patterns = direction === 'buy'
     ? ['Bullish order block retest', 'Breakout continuation', 'Higher-low liquidity sweep', 'Demand reclaim']
     : direction === 'sell'
@@ -133,6 +166,45 @@ function detectFromFile(file: File, ocrText = '', fallback?: { symbol?: string; 
     pattern,
     reason: `The chart shows ${pattern.toLowerCase()} with visible structure alignment, momentum confirmation, and clear invalidation area. Price was extracted from the uploaded screenshot and locked for signal generation.`,
   };
+}
+
+function preprocessImage(file: File) {
+  return new Promise<HTMLCanvasElement | File>((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(2.2, Math.max(1.2, 1800 / Math.max(img.width, 1)));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        resolve(file);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < data.data.length; i += 4) {
+        const r = data.data[i];
+        const g = data.data[i + 1];
+        const b = data.data[i + 2];
+        const gray = (r * 0.299 + g * 0.587 + b * 0.114);
+        const contrast = gray > 130 ? 255 : Math.max(0, gray * 0.7);
+        data.data[i] = contrast;
+        data.data[i + 1] = contrast;
+        data.data[i + 2] = contrast;
+      }
+      ctx.putImageData(data, 0, 0);
+      URL.revokeObjectURL(url);
+      resolve(canvas);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
 }
 
 export default function AIChartImageAnalyzer({ compact = false, onAnalyze, disabled, defaultSymbol, defaultAssetName, defaultMarket, defaultPrice }: AIChartImageAnalyzerProps) {
@@ -160,7 +232,8 @@ export default function AIChartImageAnalyzer({ compact = false, onAnalyze, disab
     await new Promise(resolve => setTimeout(resolve, 1800));
     let text = '';
     try {
-      const result = await recognize(file, 'eng');
+      const prepared = await preprocessImage(file);
+      const result = await recognize(prepared, 'eng');
       text = result.data.text || '';
     } catch (error) {
       console.warn('OCR extraction failed, using visual fallback:', error);
