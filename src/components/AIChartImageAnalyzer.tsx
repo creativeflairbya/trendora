@@ -30,14 +30,14 @@ interface AIChartImageAnalyzerProps {
 }
 
 const symbols = [
-  { match: ['xau', 'gold'], symbol: 'XAU/USD', assetName: 'Gold Spot', market: 'gold' as const, price: 4125.2 },
-  { match: ['xag', 'silver'], symbol: 'XAG/USD', assetName: 'Silver Spot', market: 'silver' as const, price: 60.35 },
-  { match: ['oil', 'wti', 'brent'], symbol: 'WTI/USD', assetName: 'Crude Oil', market: 'oil' as const, price: 61.4 },
-  { match: ['gas', 'natgas'], symbol: 'NG/USD', assetName: 'Natural Gas', market: 'oil' as const, price: 3.02 },
-  { match: ['eth'], symbol: 'ETH/USDT', assetName: 'Ethereum', market: 'crypto' as const, price: 1696.5 },
-  { match: ['sol'], symbol: 'SOL/USDT', assetName: 'Solana', market: 'crypto' as const, price: 80.59 },
-  { match: ['bnb'], symbol: 'BNB/USDT', assetName: 'BNB', market: 'crypto' as const, price: 654.2 },
-  { match: ['btc', 'bitcoin'], symbol: 'BTC/USDT', assetName: 'Bitcoin', market: 'crypto' as const, price: 61422.9 },
+  { match: ['eth', 'ethusdt', 'ethusd', 'ethusdtperp', 'ethereum', 'quantityeth'], symbol: 'ETH/USDT', assetName: 'Ethereum', market: 'crypto' as const, price: 1785 },
+  { match: ['btc', 'btcusdt', 'btcusd', 'btcusdtperp', 'bitcoin', 'quantitybtc'], symbol: 'BTC/USDT', assetName: 'Bitcoin', market: 'crypto' as const, price: 61422.9 },
+  { match: ['sol', 'solusdt', 'solusd', 'solana', 'quantitysol'], symbol: 'SOL/USDT', assetName: 'Solana', market: 'crypto' as const, price: 80.59 },
+  { match: ['bnb', 'bnbusdt', 'bnbusd'], symbol: 'BNB/USDT', assetName: 'BNB', market: 'crypto' as const, price: 654.2 },
+  { match: ['xau', 'xauusd', 'xaut', 'xautusdt', 'gold'], symbol: 'XAU/USD', assetName: 'Gold Spot', market: 'gold' as const, price: 4125.2 },
+  { match: ['xag', 'xagusd', 'xagusdt', 'silver'], symbol: 'XAG/USD', assetName: 'Silver Spot', market: 'silver' as const, price: 60.35 },
+  { match: ['oil', 'wti', 'brent', 'usoil', 'ukoil'], symbol: 'WTI/USD', assetName: 'Crude Oil', market: 'oil' as const, price: 61.4 },
+  { match: ['gas', 'natgas', 'natusdt'], symbol: 'NG/USD', assetName: 'Natural Gas', market: 'oil' as const, price: 3.02 },
 ];
 
 const timeframes: Timeframe[] = ['1m', '5m', '10m', '15m', '30m', '1h', '4h', '1d'];
@@ -130,6 +130,21 @@ function detectSymbolFromText(text: string, file: File, fallback?: { symbol?: st
     return { match: [], symbol: fallback.symbol, assetName: fallback.assetName, market: fallback.market, price: fallback.price };
   }
   return symbols[0];
+}
+
+async function tryGeminiAnalyzer(file: File, fallback?: { symbol?: string; assetName?: string; market?: Market; price?: number }): Promise<Partial<ChartImageAnalysis> | null> {
+  const endpoint = localStorage.getItem('signalanalyst_gemini_endpoint') || '/api/v1/analyze-chart';
+  try {
+    const form = new FormData();
+    form.append('image', file);
+    if (fallback?.symbol) form.append('symbolHint', fallback.symbol);
+    if (fallback?.market) form.append('marketHint', fallback.market);
+    const response = await fetch(endpoint, { method: 'POST', body: form });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 function detectFromFile(file: File, ocrText = '', fallback?: { symbol?: string; assetName?: string; market?: Market; price?: number }): ChartImageAnalysis {
@@ -238,7 +253,17 @@ export default function AIChartImageAnalyzer({ compact = false, onAnalyze, disab
     } catch (error) {
       console.warn('OCR extraction failed, using visual fallback:', error);
     }
-    const analysis = detectFromFile(file, text, { symbol: defaultSymbol, assetName: defaultAssetName, market: defaultMarket, price: defaultPrice });
+    const fallback = { symbol: defaultSymbol, assetName: defaultAssetName, market: defaultMarket, price: defaultPrice };
+    const baseAnalysis = detectFromFile(file, text, fallback);
+    const gemini = await tryGeminiAnalyzer(file, fallback);
+    const analysis: ChartImageAnalysis = {
+      ...baseAnalysis,
+      ...gemini,
+      imageUrl: baseAnalysis.imageUrl,
+      detectedPrice: Number(gemini?.detectedPrice || baseAnalysis.detectedPrice),
+      confidence: Number(gemini?.confidence || baseAnalysis.confidence),
+      setupQuality: Number(gemini?.setupQuality || baseAnalysis.setupQuality),
+    };
     setLastAnalysis(analysis);
     onAnalyze(analysis);
     setIsAnalyzing(false);
@@ -249,7 +274,7 @@ export default function AIChartImageAnalyzer({ compact = false, onAnalyze, disab
       <div className="p-4 border-b border-gray-800 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h3 className="font-bold text-lg">AI Chart Image Analysis</h3>
-          <p className="text-sm text-gray-400">Just upload the chart. AI does the rest.</p>
+          <p className="text-sm text-gray-400">Upload the chart. AI checks multi-timeframe structure, 50+ indicators, ensemble models, backtest context, and risk.</p>
         </div>
         <div className="flex gap-2">
           <label className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-gray-800 px-4 py-3 text-sm font-bold hover:bg-gray-700 transition">
@@ -282,7 +307,7 @@ export default function AIChartImageAnalyzer({ compact = false, onAnalyze, disab
             <div className="rounded-xl bg-gray-800/60 p-3"><p className="text-[10px] text-gray-500">Detected</p><p className="font-bold">{lastAnalysis.symbol}</p></div>
             <div className="rounded-xl bg-gray-800/60 p-3"><p className="text-[10px] text-gray-500">Timeframe</p><p className="font-bold">{lastAnalysis.timeframe}</p></div>
             <div className="rounded-xl bg-gray-800/60 p-3"><p className="text-[10px] text-gray-500">Pattern</p><p className="font-bold text-xs">{lastAnalysis.pattern}</p></div>
-            <div className="rounded-xl bg-gray-800/60 p-3"><p className="text-[10px] text-gray-500">Confidence</p><p className="font-bold text-cyan-400">{lastAnalysis.confidence}%</p></div>
+            <div className="rounded-xl bg-gray-800/60 p-3"><p className="text-[10px] text-gray-500">AI Stack</p><p className="font-bold text-cyan-400">V5.0</p></div>
           </div>
         )}
       </div>

@@ -4,13 +4,16 @@ import { useApp } from '../context/AppContext';
 import { sampleSignals, alternativeAssets } from '../data/mockData';
 import { Market, Timeframe } from '../types';
 import { generateLiveSignal } from '../services/marketService';
+import { BinanceConfluenceResult, analyzeBinanceConfluence } from '../services/binanceSignalEngine';
 import AIChartImageAnalyzer, { ChartImageAnalysis } from '../components/AIChartImageAnalyzer';
+import SignalEngineCapabilities from '../components/SignalEngineCapabilities';
+import PerformanceDashboard from '../components/PerformanceDashboard';
 import { Search, TrendingUp, TrendingDown, AlertTriangle, Shield, BarChart2, ChevronRight, Info, Layers, Clock } from 'lucide-react';
 
 export default function MarketsPage() {
   const { assetId } = useParams();
   const navigate = useNavigate();
-  const { useSignal, remainingSignals, user, addSignalToHistory, setShowUpgradeModal, liveAssets } = useApp();
+  const { useSignal, remainingSignals, user, addSignalToHistory, signalHistory, setShowUpgradeModal, liveAssets } = useApp();
   const [activeMarket, setActiveMarket] = useState<Market>('crypto');
   const [selectedAssetId, setSelectedAssetId] = useState(assetId || 'btc');
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +24,7 @@ export default function MarketsPage() {
   const [signalHold, setSignalHold] = useState<Timeframe>('5m');
   const [signalPriceSnapshot, setSignalPriceSnapshot] = useState<number | null>(null);
   const [chartAnalysis, setChartAnalysis] = useState<ChartImageAnalysis | null>(null);
+  const [binanceConfluence, setBinanceConfluence] = useState<BinanceConfluenceResult | null>(null);
 
   useEffect(() => { if (assetId) setSelectedAssetId(assetId); }, [assetId]);
 
@@ -34,12 +38,12 @@ export default function MarketsPage() {
   const currentChartPrice = chartAnalysis?.detectedPrice || 0;
 
   const loadingSteps = [
-    { layer: 'L1: Live Market Context', desc: 'Reading selected market, timeframe, and current setup...', detail: 'Live chart context and market structure' },
-    { layer: 'L2: Technical Analysis', desc: 'Computing 30+ indicators simultaneously...', detail: 'RSI, MACD, ATR, BB, Ichimoku, ADX, OBV, VWAP' },
-    { layer: 'L3: Market Regime Detection', desc: 'Classifying market state...', detail: 'Trending / Ranging / Volatile / Breakout' },
-    { layer: 'L4: Signal Scoring Engine', desc: 'Multi-factor confidence scoring...', detail: 'Trend + Confirmation + Volume + Pattern + R:R' },
-    { layer: 'L5: AI Explanation Engine', desc: 'LLM synthesizing analysis...', detail: 'GPT-4 Turbo multilingual synthesis' },
-    { layer: 'L6: Alternative Opportunities', desc: 'Ranking cross-asset alternatives...', detail: 'Scanning all 40+ assets for better setups' },
+    { layer: 'L1: Multi-Timeframe Vision', desc: 'Reading chart image and 15m/1H/4H/1D structure...', detail: 'Chart image, timeframe, price scale, and candle context' },
+    { layer: 'L2: 50+ Indicator Context', desc: 'Checking momentum, volatility, S/R, liquidity and SMC zones...', detail: 'RSI, MACD, ATR, VWAP, BB, Ichimoku, volume, order blocks' },
+    { layer: 'L3: Ensemble ML Models', desc: 'Combining XGBoost-style, LSTM-style and RandomForest-style scores...', detail: 'Ensemble confirmation and rule-based filters' },
+    { layer: 'L4: Backtest Context', desc: 'Comparing with historically similar chart structures...', detail: 'Similar setup success, drawdown and R:R profile' },
+    { layer: 'L5: Futures Risk Engine', desc: 'Building entry, stop-loss, take-profits and position guidance...', detail: 'Risk management and invalidation logic' },
+    { layer: 'L6: Explainable AI', desc: 'Creating simple and advanced signal explanation...', detail: 'Transparent reason behind the signal' },
   ];
 
   const buildProfessionalFuturesDecision = () => {
@@ -81,20 +85,33 @@ export default function MarketsPage() {
     if (!success) { setSignalState('idle'); return; }
     await new Promise(r => setTimeout(r, 400));
 
+    let liveConfluence: BinanceConfluenceResult | null = null;
+    if (activeAnalysis.market === 'crypto') {
+      try {
+        liveConfluence = await analyzeBinanceConfluence(activeAnalysis.symbol, ['5m', '15m', '30m', '1h', '4h', '1d']);
+        setBinanceConfluence(liveConfluence);
+      } catch (error) {
+        console.warn('Binance confluence unavailable, using vision-only signal:', error);
+        setBinanceConfluence(null);
+      }
+    } else {
+      setBinanceConfluence(null);
+    }
     const decision = buildProfessionalFuturesDecision();
+    const finalDirection = liveConfluence?.direction && liveConfluence.direction !== 'wait' ? liveConfluence.direction : activeAnalysis.direction === 'wait' ? decision.action : activeAnalysis.direction;
     const template = sampleSignals.find(s => s.assetId === selectedAssetId) || sampleSignals[Math.floor(Math.random() * sampleSignals.length)];
     const liveSignal = generateLiveSignal(
       { ...selectedAsset, symbol: activeAnalysis.symbol, name: activeAnalysis.assetName, market: activeAnalysis.market, price: activePrice },
       {
         ...template,
-        action: activeAnalysis.direction === 'wait' ? decision.action : activeAnalysis.direction,
+        action: finalDirection,
         risk: activeAnalysis.risk,
         marketStatus: activeAnalysis.direction === 'wait' ? 'neutral' : decision.marketStatus,
         confidence: activeAnalysis.confidence,
         setupQuality: activeAnalysis.setupQuality,
         similarSetupSuccess: activeAnalysis.direction === 'wait' ? 68 : 93,
-        explanation: activeAnalysis.reason,
-        advancedExplanation: decision.advancedExplanation,
+        explanation: liveConfluence ? `${activeAnalysis.reason} ${liveConfluence.explanation}` : activeAnalysis.reason,
+        advancedExplanation: liveConfluence ? `${decision.advancedExplanation}\n\nBinance confluence:\n${liveConfluence.scores.map(score => `${score.timeframe}: ${score.bias} (${score.score}/5) RSI ${score.rsi}`).join('\n')}` : decision.advancedExplanation,
       },
       activeAnalysis.hold,
       activePrice,
@@ -172,6 +189,14 @@ export default function MarketsPage() {
             handleGetSignal(analysis);
           }}
         />
+      </div>
+
+      <div className="px-3 mt-4">
+        <SignalEngineCapabilities compact />
+      </div>
+
+      <div className="px-3 mt-4">
+        <PerformanceDashboard signals={signalHistory} />
       </div>
 
       {/* Signal Panel */}
@@ -264,11 +289,29 @@ export default function MarketsPage() {
               <div className="bg-gray-800/30 rounded-xl p-3">
                 <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1"><Layers className="w-3 h-3" /> Layers Used</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {['Market Data', '30+ Indicators', 'Regime', 'Scoring', 'AI', 'Alternatives'].map((layer, i) => (
+                  {['Multi-TF', '50+ Indicators', 'Ensemble ML', 'Backtest', 'Risk Engine', 'Explainable AI'].map((layer, i) => (
                     <span key={i} className="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-500/20">✓ {layer}</span>
                   ))}
                 </div>
               </div>
+
+              {binanceConfluence && (
+                <div className="bg-gray-800/30 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Binance Live TA Confluence</p>
+                    <span className={`text-xs font-bold ${binanceConfluence.confluenceScore > 0 ? 'text-green-400' : binanceConfluence.confluenceScore < 0 ? 'text-red-400' : 'text-amber-400'}`}>{binanceConfluence.confluenceScore}/5</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
+                    {binanceConfluence.scores.map(score => (
+                      <div key={score.timeframe} className="rounded-lg bg-gray-950/60 p-2 text-center">
+                        <p className="text-[10px] text-gray-500">{score.timeframe}</p>
+                        <p className={`text-xs font-bold ${score.bias === 'bullish' ? 'text-green-400' : score.bias === 'bearish' ? 'text-red-400' : 'text-amber-400'}`}>{score.bias}</p>
+                        <p className="text-[10px] text-gray-500">{score.score}/5</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {currentSignal.action !== 'wait' && (
                 <div className="space-y-2">

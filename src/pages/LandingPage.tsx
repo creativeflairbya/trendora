@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Zap, BarChart3, Shield, Globe, ChevronRight, Star, TrendingUp, Lock, ArrowRight, CheckCircle } from 'lucide-react';
 import { plans, faqs } from '../data/mockData';
 import { useState } from 'react';
+import SignalEngineCapabilities from '../components/SignalEngineCapabilities';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export default function LandingPage() {
             <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">Simple Decisions.</span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-            SignalAnalyst AI uses a 6-layer hybrid engine to analyze crypto, gold, oil, and silver with 30+ indicators, chart-image analysis, and confidence-based AI signals.
+            SignalAnalyst AI uses a professional futures signal stack with multi-timeframe analysis, 50+ indicator context, ensemble AI scoring, and risk-managed chart-image signals.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <button onClick={() => navigate('/signup')} className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-lg hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25">
@@ -112,6 +113,16 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="py-16 px-4 bg-gradient-to-b from-transparent to-gray-900/40">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">Professional AI Signal Stack</h2>
+            <p className="text-gray-400">Designed for futures signals with explainable AI, backtesting context, and strict risk management.</p>
+          </div>
+          <SignalEngineCapabilities compact />
+        </div>
+      </section>
+
       {/* Why SignalAnalyst AI */}
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
@@ -121,9 +132,9 @@ export default function LandingPage() {
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
-              { icon: '🧠', title: '6-Layer Hybrid Engine', desc: 'Market data + 30+ indicators + regime detection + signal scoring + AI synthesis + alternatives — all running simultaneously.' },
+              { icon: '🧠', title: 'Ensemble AI Engine', desc: 'XGBoost-style scoring + LSTM-style sequence context + RandomForest-style confirmation + rule-based risk filters.' },
               { icon: '🛡️', title: 'Says "No Signal" When Needed', desc: 'We tell you when to wait. That restraint improves trust and your outcomes — unlike tools that force signals.' },
-              { icon: '📊', title: 'Real-Time Market View', desc: 'Analyze live-style candles across 40+ assets with multiple timeframes and hold settings.' },
+              { icon: '📊', title: '50+ Indicator Context', desc: 'Multi-timeframe support/resistance, RSI, MACD, ATR, VWAP, Bollinger, Ichimoku, volume, SMC, order blocks, and liquidity zones.' },
               { icon: '🔄', title: 'Safer Alternatives', desc: 'No strong setup? Our L6 engine suggests better opportunities across all markets with confidence scores.' },
               { icon: '🌐', title: '13 Languages + Local Payments', desc: 'Use SignalAnalyst AI in your language. Pay with Easypaisa, JazzCash, UPI, Pix, Binance Pay, and 25+ methods.' },
               { icon: '🔒', title: 'Security-First + Honest', desc: 'Encrypted, monitored, hardened. Three separate accuracy metrics — not fake "99%" claims.' },
