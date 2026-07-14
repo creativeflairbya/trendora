@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Zap, Eye, EyeOff, ArrowRight, Mail, Lock, User } from 'lucide-react';
+import { Zap, Eye, EyeOff, ArrowRight, Mail, Lock, User, Phone, KeyRound } from 'lucide-react';
 
 export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [phoneCode, setPhoneCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState('creativeflairbya@gmail.com');
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,11 +30,13 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
       if (success) {
         navigate('/dashboard');
       } else {
-        setError('Invalid email or password. Try admin@signalanalyst.ai / SignalAnalyst2024!');
+        setError('Invalid email or password. Use password reset if you need account recovery.');
       }
     } else {
       if (!name.trim()) { setError('Name is required'); setLoading(false); return; }
       if (password.length < 6) { setError('Password must be at least 6 characters'); setLoading(false); return; }
+      if (!phone.trim()) { setError('Phone number is required'); setLoading(false); return; }
+      if (codeSent && phoneCode !== '123456') { setError('Invalid verification code. Demo code is 123456'); setLoading(false); return; }
       const success = signup(name, email, password);
       if (success) {
         navigate('/onboarding');
@@ -64,13 +71,32 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-gray-900/80 backdrop-blur-lg border border-gray-800 rounded-2xl p-6 space-y-4">
           {mode === 'signup' && (
-            <div>
-              <label className="text-sm text-gray-400 mb-1 block">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition" />
+            <>
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Full Name</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition" />
+                </div>
               </div>
-            </div>
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Phone Number</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+92 300 0000000" className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition" />
+                  </div>
+                  <button type="button" onClick={() => setCodeSent(true)} className="px-3 rounded-xl bg-cyan-500 text-gray-950 text-xs font-bold">Send Code</button>
+                </div>
+              </div>
+              {codeSent && (
+                <div>
+                  <label className="text-sm text-gray-400 mb-1 block">Verification Code</label>
+                  <input value={phoneCode} onChange={e => setPhoneCode(e.target.value)} placeholder="123456" className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition" />
+                  <p className="text-[10px] text-gray-500 mt-1">Demo verification code: 123456. Connect SMS provider in production.</p>
+                </div>
+              )}
+            </>
           )}
           <div>
             <label className="text-sm text-gray-400 mb-1 block">Email</label>
@@ -98,6 +124,20 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
             {loading ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Create Account'} <ArrowRight className="w-4 h-4" />
           </button>
 
+          {mode === 'login' && (
+            <button type="button" onClick={() => setShowReset(!showReset)} className="w-full text-xs text-cyan-400 hover:underline flex items-center justify-center gap-1">
+              <KeyRound className="w-3 h-3" /> Forgot or change password?
+            </button>
+          )}
+
+          {showReset && (
+            <div className="rounded-xl bg-gray-800/70 border border-gray-700 p-3 space-y-2">
+              <p className="text-xs text-gray-400">Password reset / master access recovery</p>
+              <input value={resetEmail} onChange={e => setResetEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-sm outline-none focus:border-cyan-500" />
+              <button type="button" onClick={() => setError(`Reset link sent to ${resetEmail}. Demo mode: check configured recovery inbox.`)} className="w-full py-2 rounded-lg bg-cyan-500 text-gray-950 text-xs font-bold">Send Reset Link</button>
+            </div>
+          )}
+
           <div className="text-center text-sm text-gray-500">
             {mode === 'login' ? (
               <>Don't have an account? <button type="button" onClick={() => navigate('/signup')} className="text-cyan-400 hover:underline">Sign Up</button></>
@@ -107,12 +147,7 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
           </div>
         </form>
 
-        {/* Master account hint */}
-        <div className="mt-4 bg-gray-900/50 border border-gray-800 rounded-xl p-4 text-center">
-          <p className="text-xs text-gray-500 mb-1">🔥 Demo Master Account</p>
-          <p className="text-xs text-gray-400 font-mono">admin@signalanalyst.ai / SignalAnalyst2024!</p>
-          <p className="text-xs text-gray-600 mt-1">Full unlimited access + Admin panel</p>
-        </div>
+        <p className="mt-4 text-center text-xs text-gray-600">Secure admin recovery is available through the reset option.</p>
       </div>
     </div>
   );

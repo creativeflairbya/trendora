@@ -98,7 +98,7 @@ export default function MarketsPage() {
       setBinanceConfluence(null);
     }
     const decision = buildProfessionalFuturesDecision();
-    const finalDirection = liveConfluence?.direction && liveConfluence.direction !== 'wait' ? liveConfluence.direction : activeAnalysis.direction === 'wait' ? decision.action : activeAnalysis.direction;
+    const finalDirection = activeAnalysis.direction === 'wait' ? decision.action : activeAnalysis.direction;
     const template = sampleSignals.find(s => s.assetId === selectedAssetId) || sampleSignals[Math.floor(Math.random() * sampleSignals.length)];
     const liveSignal = generateLiveSignal(
       { ...selectedAsset, symbol: activeAnalysis.symbol, name: activeAnalysis.assetName, market: activeAnalysis.market, price: activePrice },
@@ -174,19 +174,31 @@ export default function MarketsPage() {
       </div>
 
       <div className="px-3">
+        <div className="mb-3 rounded-2xl border border-gray-800 bg-gray-900 p-3">
+          <p className="mb-2 text-xs font-semibold text-gray-300">Signal speed</p>
+          <div className="grid grid-cols-3 gap-2">
+            {[{ label: 'Ultra Fast', value: '1m' as Timeframe, desc: '1-3 min' }, { label: 'Scalp', value: '5m' as Timeframe, desc: '5-10 min' }, { label: 'Quick', value: '10m' as Timeframe, desc: '10-20 min' }].map(item => (
+              <button key={item.value} onClick={() => setSignalHold(item.value)} className={`rounded-xl border p-2 text-left ${signalHold === item.value ? 'border-yellow-400 bg-yellow-400/10 text-yellow-300' : 'border-gray-800 bg-gray-950 text-gray-400'}`}>
+                <span className="block text-xs font-bold">{item.label}</span>
+                <span className="text-[10px]">{item.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <AIChartImageAnalyzer
           defaultSymbol={selectedAsset.symbol}
           defaultAssetName={selectedAsset.name}
           defaultMarket={selectedAsset.market}
           defaultPrice={selectedAsset.price}
           onAnalyze={analysis => {
-            setChartAnalysis(analysis);
+            const adjustedAnalysis = { ...analysis, hold: signalHold };
+            setChartAnalysis(adjustedAnalysis);
             const matchingAsset = liveAssets.find(asset => asset.symbol === analysis.symbol || asset.name === analysis.assetName);
             if (matchingAsset) {
               setSelectedAssetId(matchingAsset.id);
               navigate(`/markets/${matchingAsset.id}`, { replace: true });
             }
-            handleGetSignal(analysis);
+            handleGetSignal(adjustedAnalysis);
           }}
         />
       </div>

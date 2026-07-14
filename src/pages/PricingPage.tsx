@@ -8,6 +8,7 @@ export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [paymentCategory, setPaymentCategory] = useState('international');
+  const [paymentNotice, setPaymentNotice] = useState('');
 
   const planIcons: Record<string, React.ReactNode> = {
     free: <Zap className="w-5 h-5" />,
@@ -24,10 +25,11 @@ export default function PricingPage() {
     setShowPayment(true);
   };
 
-  const handlePayment = (_method: string) => {
+  const handlePayment = (method: string) => {
     if (user && selectedPlan) {
       setUser({ ...user, plan: selectedPlan as any, signalsUsed: 0, signalsTotal: selectedPlan === 'unlimited' ? -1 : plans.find(p => p.id === selectedPlan)?.signals || 0 });
     }
+    setPaymentNotice(`Test payment approved via ${paymentMethods.find(m => m.id === method)?.label || method}. Plan activated in demo mode.`);
     setShowPayment(false);
     setSelectedPlan(null);
   };
@@ -61,6 +63,8 @@ export default function PricingPage() {
           <p className="text-xs text-gray-400">Upgrade to unlock more signals and premium features</p>
         </div>
       </div>
+
+      {paymentNotice && <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-3 text-sm text-green-300">{paymentNotice}</div>}
 
       <div className="space-y-3">
         {plans.map(plan => {
@@ -135,6 +139,13 @@ export default function PricingPage() {
                     <span className="text-[10px] text-green-400">Active</span>
                   </button>
                 ))
+              )}
+              {paymentCategory === 'pakistan' && (
+                <div className="mt-3 rounded-xl bg-gray-800/70 border border-gray-700 p-3 text-xs text-gray-400 space-y-2">
+                  <p className="font-semibold text-gray-200">Local payment test flow</p>
+                  <p>Send payment to the admin receiving account configured in Master Admin, then click the selected wallet above to simulate verification.</p>
+                  <input placeholder="Transaction ID / Sender number" className="w-full rounded-lg bg-gray-900 border border-gray-700 px-3 py-2 outline-none focus:border-cyan-500" />
+                </div>
               )}
             </div>
             <div className="p-3 border-t border-gray-800 flex-shrink-0">

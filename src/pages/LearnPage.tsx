@@ -4,6 +4,7 @@ import { BookOpen, Clock, ChevronRight } from 'lucide-react';
 
 export default function LearnPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [openModule, setOpenModule] = useState<string | null>(null);
   const categories = ['all', ...new Set(learningModules.map(m => m.category))];
   const filtered = selectedCategory === 'all' ? learningModules : learningModules.filter(m => m.category === selectedCategory);
 
@@ -38,8 +39,8 @@ export default function LearnPage() {
       {/* Modules */}
       <div className="space-y-3">
         {filtered.map(module => (
-          <div key={module.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-cyan-500/30 transition cursor-pointer">
-            <div className="flex items-start gap-3">
+          <div key={module.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-cyan-500/30 transition">
+            <button onClick={() => setOpenModule(openModule === module.id ? null : module.id)} className="w-full p-4 flex items-start gap-3 text-left">
               <span className="text-2xl">{module.icon}</span>
               <div className="flex-1">
                 <h3 className="font-semibold text-sm">{module.title}</h3>
@@ -51,8 +52,20 @@ export default function LearnPage() {
                   </span>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-600 flex-shrink-0" />
-            </div>
+              <ChevronRight className={`w-4 h-4 text-gray-600 flex-shrink-0 transition ${openModule === module.id ? 'rotate-90' : ''}`} />
+            </button>
+            {openModule === module.id && (
+              <div className="px-4 pb-4 border-t border-gray-800/70 bg-gray-950/40">
+                <div className="pt-4 space-y-3 text-sm text-gray-300">
+                  <p>{module.description}</p>
+                  <div className="rounded-xl bg-gray-900 border border-gray-800 p-3">
+                    <p className="font-semibold text-cyan-400 mb-1">What you will learn</p>
+                    <p className="text-xs text-gray-400">How to apply this concept inside SignalAnalyst AI, how it affects confidence, and when to avoid low-quality setups.</p>
+                  </div>
+                  <button className="w-full rounded-xl bg-cyan-500/15 border border-cyan-500/30 py-2 text-xs font-bold text-cyan-300">Mark Lesson Complete</button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

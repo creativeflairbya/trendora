@@ -100,6 +100,26 @@ Important: if a key is exposed publicly, rotate it immediately.
 
 ## Gemini Chart Analyzer Backend
 
+For Vercel deployment, set this environment variable in Vercel Project Settings:
+
+```text
+GEMINI_API_KEY=your_rotated_gemini_key
+```
+
+The app includes a Vercel serverless endpoint:
+
+```text
+api/v1/analyze-chart.js
+```
+
+Frontend calls it automatically at:
+
+```http
+/api/v1/analyze-chart
+```
+
+Do not hardcode Gemini keys in React/browser files. Anyone can view frontend code and steal the key.
+
 Start the chart-image analyzer backend:
 
 ```bash

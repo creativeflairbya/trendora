@@ -213,7 +213,7 @@ function UsersTab({ search, setSearch }: { search: string; setSearch: (s: string
               <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Credits</p><input type="number" value={u.credits} onChange={e => updateUser(u.id, { credits: Number(e.target.value) })} className="w-full bg-transparent text-center text-xs font-semibold outline-none" /></div>
               <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Expiry</p><input value={u.expiresAt} onChange={e => updateUser(u.id, { expiresAt: e.target.value })} className="w-full bg-transparent text-center text-[10px] font-semibold outline-none" /></div>
               <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Plan</p><select value={u.plan} onChange={e => updateUser(u.id, { plan: e.target.value })} className="w-full bg-transparent text-center text-[10px] font-semibold outline-none"><option>free</option><option>starter</option><option>active</option><option>pro</option><option>unlimited</option></select></div>
-              <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Actions</p><div className="flex gap-1 justify-center"><button onClick={() => updateUser(u.id, { credits: u.credits === -1 ? 25 : u.credits + 10 })} className="text-[10px] text-cyan-400">+10</button><button onClick={() => updateUser(u.id, { status: u.status === 'active' ? 'suspended' : 'active' })} className="text-[10px] text-red-400">{u.status === 'active' ? 'Ban' : 'Unban'}</button></div></div>
+              <div className="bg-gray-800/50 rounded-lg p-1.5 text-center"><p className="text-[10px] text-gray-500">Actions</p><div className="flex gap-1 justify-center"><button onClick={() => updateUser(u.id, { credits: u.credits === -1 ? 25 : u.credits + 10 })} className="text-[10px] text-cyan-400">+10</button><button onClick={() => updateUser(u.id, { status: u.status === 'active' ? 'suspended' : 'active' })} className="text-[10px] text-red-400">{u.status === 'active' ? 'Ban' : 'Unban'}</button><button onClick={() => setUsers(prev => prev.filter(user => user.id !== u.id))} className="text-[10px] text-red-300">Delete</button></div></div>
             </div>
           </div>
         ))}
@@ -341,6 +341,14 @@ function ContentTab() {
 
 function BillingTab() {
   const [payCat, setPayCat] = useState('international');
+  const [receiverAccounts, setReceiverAccounts] = useState({
+    easypaisa: '03XX-XXXXXXX',
+    jazzcash: '03XX-XXXXXXX',
+    sadapay: '03XX-XXXXXXX',
+    bank: 'Bank name / IBAN',
+    stripe: 'Stripe account email',
+    paypal: 'PayPal email',
+  });
   const categories = [{key:'international',label:'🌍 International'},{key:'pakistan',label:'🇵🇰 Pakistan'},{key:'middle_east',label:'🇦🇪 Middle East'},{key:'south_asia',label:'🇮🇳 South Asia'},{key:'southeast_asia',label:'🇮🇩 SE Asia'},{key:'turkey',label:'🇹🇷 Turkey'},{key:'africa',label:'🌍 Africa'},{key:'latam',label:'🇧🇷 LatAm'},{key:'crypto',label:'₮ Crypto'},{key:'bank',label:'🏦 Bank'}];
 
   return (
@@ -381,6 +389,20 @@ function BillingTab() {
       </div>
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <h3 className="font-bold text-sm mb-1">Receiving Accounts</h3>
+        <p className="text-[10px] text-gray-500 mb-3">Master admin can set where local and international payments are received.</p>
+        <div className="grid gap-2 md:grid-cols-2">
+          {Object.entries(receiverAccounts).map(([key, value]) => (
+            <label key={key} className="rounded-xl bg-gray-800/50 border border-gray-700 p-3">
+              <span className="block text-[10px] uppercase tracking-wide text-gray-500 mb-1">{key}</span>
+              <input value={value} onChange={e => setReceiverAccounts(prev => ({ ...prev, [key]: e.target.value }))} className="w-full bg-transparent text-sm outline-none" />
+            </label>
+          ))}
+        </div>
+        <button className="mt-3 w-full rounded-xl bg-cyan-500 py-2 text-sm font-bold text-gray-950">Save Payment Receiving Accounts</button>
+      </div>
+
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
         <h3 className="font-bold text-sm mb-3">Plan Controls</h3>
         <div className="space-y-2">
           {[{l:'Trial Period',v:'3 days'},{l:'Grace Period',v:'2 days'},{l:'Failed Payment Retry',v:'3 attempts'},{l:'Fair-Use Limit (Unlimited)',v:'500/day'},{l:'Refund Window',v:'7 days'},{l:'Coupon System',v:'Active (12 codes)'}].map(item=>(
@@ -410,6 +432,7 @@ function BillingTab() {
 }
 
 function SecurityTab() {
+  const [reviewedEvent, setReviewedEvent] = useState<string | null>(null);
   return (
     <div className="space-y-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
@@ -429,10 +452,15 @@ function SecurityTab() {
             <div key={i} className="flex items-center gap-3 bg-gray-800/50 rounded-lg p-3">
               <AlertTriangle className={`w-4 h-4 ${ev.sev==='danger'?'text-red-400':ev.sev==='warning'?'text-amber-400':'text-blue-400'}`}/>
               <div className="flex-1"><p className="text-xs font-medium">{ev.e}</p><p className="text-[10px] text-gray-500">{ev.t}</p></div>
-              <button className="text-[10px] text-cyan-400">Review</button>
+              <button onClick={() => setReviewedEvent(ev.e)} className="text-[10px] text-cyan-400">Review</button>
             </div>
           ))}
         </div>
+        {reviewedEvent && (
+          <div className="mt-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 p-3 text-xs text-cyan-200">
+            Reviewed: {reviewedEvent}. Recommended action: verify IP/device, force password reset if repeated, and keep audit entry.
+          </div>
+        )}
       </div>
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
         <h3 className="font-bold text-sm mb-3">Audit Log</h3>
