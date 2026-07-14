@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { adminStats, assets, paymentMethods as allPaymentMethods } from '../data/mockData';
@@ -96,6 +96,15 @@ function StatCard({ label, value, icon, color }: { label: string; value: string 
 }
 
 function OverviewTab() {
+  const [apiStatus, setApiStatus] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/v1/api-status')
+      .then(res => res.ok ? res.json() : null)
+      .then(setApiStatus)
+      .catch(() => setApiStatus(null));
+  }, []);
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -147,6 +156,24 @@ function OverviewTab() {
             </div>
           ))}
         </div>
+      </div>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+        <h3 className="font-bold text-sm mb-3">API Usage & Key Status</h3>
+        <div className="space-y-2">
+          {(apiStatus?.services || [
+            { name: 'Gemini Vision', key: 'GEMINI_API_KEY', configured: false, status: 'unknown', expires: 'Set API status endpoint' },
+            { name: 'Binance Public API', key: 'none', configured: true, status: 'public', expires: 'No API key required' },
+          ]).map((service: any) => (
+            <div key={service.name} className="flex items-center justify-between gap-3 rounded-lg bg-gray-800/50 p-3">
+              <div>
+                <p className="text-sm font-semibold">{service.name}</p>
+                <p className="text-[10px] text-gray-500">Key: {service.key} · Expires: {service.expires}</p>
+              </div>
+              <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${service.configured ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{service.status}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[10px] text-gray-600">Real values are read from server environment variables when deployed on Vercel or your Node server.</p>
       </div>
     </div>
   );
@@ -310,17 +337,66 @@ function AIConfigTab() {
 }
 
 function ContentTab() {
+  const [pages, setPages] = useState([
+    { id: 'home', title: 'Home Page', slug: '/', sections: [
+      { type: 'hero', title: 'AI Signals. Simple Decisions.', body: 'Chart-image analysis for crypto, gold, oil, and silver.', media: '' },
+      { type: 'features', title: 'Professional AI Signal Stack', body: 'Multi-timeframe, 50+ indicators, ensemble scoring, risk management.', media: '' },
+    ]},
+    { id: 'pricing', title: 'Pricing Page', slug: '/pricing', sections: [
+      { type: 'pricing', title: 'Simple, Honest Pricing', body: 'Start free. Upgrade when ready.', media: '' },
+    ]},
+    { id: 'learn', title: 'Learn Page', slug: '/learn', sections: [
+      { type: 'content', title: 'Beginner Trading Lessons', body: 'Learn how signals, confidence, risk and stop-loss work.', media: '' },
+    ]},
+  ]);
+  const [selectedPageId, setSelectedPageId] = useState('home');
+  const [saved, setSaved] = useState(false);
+  const selectedPage = pages.find(page => page.id === selectedPageId) || pages[0];
+
+  const updatePage = (patch: any) => setPages(prev => prev.map(page => page.id === selectedPage.id ? { ...page, ...patch } : page));
+  const updateSection = (index: number, patch: any) => updatePage({ sections: selectedPage.sections.map((section, i) => i === index ? { ...section, ...patch } : section) });
+  const addSection = () => updatePage({ sections: [...selectedPage.sections, { type: 'content', title: 'New Section', body: 'Write content here...', media: '' }] });
+  const removeSection = (index: number) => updatePage({ sections: selectedPage.sections.filter((_, i) => i !== index) });
+
   return (
     <div className="space-y-4">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-        <h3 className="font-bold text-sm mb-3">Content Management</h3>
-        <div className="space-y-2">
-          {[{label:'Hero Text',value:'AI Signals. Simple Decisions.'},{label:'Subheading',value:'SignalAnalyst AI helps everyday users...'},{label:'Announcement Bar',value:'🔥 6-Layer Engine: 79% avg confidence'},{label:'Promo Banner',value:'Limited: 20% off Pro plan'}].map(item=>(
-            <div key={item.label} className="bg-gray-800/50 rounded-lg p-3">
-              <div className="flex items-center justify-between"><span className="text-sm font-medium">{item.label}</span><button className="text-xs text-cyan-400">Edit</button></div>
-              <p className="text-xs text-gray-400 mt-1">{item.value}</p>
+        <h3 className="font-bold text-sm mb-3">Page Builder</h3>
+        <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+          <div className="space-y-2">
+            {pages.map(page => (
+              <button key={page.id} onClick={() => setSelectedPageId(page.id)} className={`w-full rounded-xl border p-3 text-left text-sm ${selectedPageId === page.id ? 'border-cyan-500 bg-cyan-500/10 text-cyan-300' : 'border-gray-800 bg-gray-950 text-gray-400'}`}>
+                <span className="font-semibold block">{page.title}</span>
+                <span className="text-[10px]">{page.slug}</span>
+              </button>
+            ))}
+          </div>
+          <div className="space-y-3">
+            <div className="grid gap-2 md:grid-cols-2">
+              <input value={selectedPage.title} onChange={e => updatePage({ title: e.target.value })} className="rounded-xl bg-gray-800 border border-gray-700 px-3 py-2 text-sm outline-none focus:border-cyan-500" />
+              <input value={selectedPage.slug} onChange={e => updatePage({ slug: e.target.value })} className="rounded-xl bg-gray-800 border border-gray-700 px-3 py-2 text-sm outline-none focus:border-cyan-500" />
             </div>
-          ))}
+            {selectedPage.sections.map((section, index) => (
+              <div key={index} className="rounded-xl border border-gray-800 bg-gray-950 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <select value={section.type} onChange={e => updateSection(index, { type: e.target.value })} className="rounded-lg bg-gray-900 border border-gray-700 px-2 py-2 text-xs outline-none">
+                    <option>hero</option><option>content</option><option>features</option><option>pricing</option><option>faq</option><option>media</option>
+                  </select>
+                  <input value={section.title} onChange={e => updateSection(index, { title: e.target.value })} className="flex-1 rounded-lg bg-gray-900 border border-gray-700 px-3 py-2 text-sm outline-none" />
+                  <button onClick={() => removeSection(index)} className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400">Remove</button>
+                </div>
+                <textarea value={section.body} onChange={e => updateSection(index, { body: e.target.value })} className="w-full rounded-lg bg-gray-900 border border-gray-700 p-2 text-xs outline-none focus:border-cyan-500" rows={3} />
+                <input value={section.media} onChange={e => updateSection(index, { media: e.target.value })} placeholder="Media URL or image path" className="w-full rounded-lg bg-gray-900 border border-gray-700 px-3 py-2 text-xs outline-none focus:border-cyan-500" />
+              </div>
+            ))}
+            <button onClick={addSection} className="w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 py-2 text-sm font-bold text-cyan-300">Add Section</button>
+            <button onClick={() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }} className="w-full rounded-xl bg-cyan-500 py-2 text-sm font-bold text-gray-950">Save Page Builder Content</button>
+            {saved && <p className="text-xs text-green-400">Saved in admin demo. Connect CMS/database for production persistence.</p>}
+            <div className="rounded-xl bg-gray-950 border border-gray-800 p-3">
+              <p className="text-xs font-semibold text-gray-300 mb-2">Preview Structure</p>
+              <pre className="max-h-48 overflow-auto text-[10px] text-gray-500">{JSON.stringify(selectedPage, null, 2)}</pre>
+            </div>
+          </div>
         </div>
       </div>
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">

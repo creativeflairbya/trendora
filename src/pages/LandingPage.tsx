@@ -317,37 +317,37 @@ export default function LandingPage() {
             <div>
               <p className="font-semibold text-sm mb-3">Product</p>
               <div className="space-y-2 text-sm text-gray-500">
-                <p className="hover:text-gray-300 cursor-pointer">Features</p>
-                <p className="hover:text-gray-300 cursor-pointer">Pricing</p>
-                <p className="hover:text-gray-300 cursor-pointer">Markets</p>
-                <p className="hover:text-gray-300 cursor-pointer">API</p>
+                <button onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })} className="block hover:text-gray-300">Features</button>
+                <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="block hover:text-gray-300">Pricing</button>
+                <button onClick={() => navigate('/signup')} className="block hover:text-gray-300">Markets</button>
+                <button onClick={() => navigate('/login')} className="block hover:text-gray-300">API</button>
               </div>
             </div>
             <div>
               <p className="font-semibold text-sm mb-3">Company</p>
               <div className="space-y-2 text-sm text-gray-500">
-                <p className="hover:text-gray-300 cursor-pointer">About</p>
-                <p className="hover:text-gray-300 cursor-pointer">Blog</p>
-                <p className="hover:text-gray-300 cursor-pointer">Careers</p>
-                <p className="hover:text-gray-300 cursor-pointer">Contact</p>
+                <button onClick={() => navigate('/signup')} className="block hover:text-gray-300">About</button>
+                <button onClick={() => navigate('/signup')} className="block hover:text-gray-300">Blog</button>
+                <button onClick={() => navigate('/signup')} className="block hover:text-gray-300">Careers</button>
+                <button onClick={() => navigate('/login')} className="block hover:text-gray-300">Contact</button>
               </div>
             </div>
             <div>
               <p className="font-semibold text-sm mb-3">Support</p>
               <div className="space-y-2 text-sm text-gray-500">
-                <p className="hover:text-gray-300 cursor-pointer">Help Center</p>
-                <p className="hover:text-gray-300 cursor-pointer">FAQ</p>
-                <p className="hover:text-gray-300 cursor-pointer">Status</p>
-                <p className="hover:text-gray-300 cursor-pointer">Tickets</p>
+                <button onClick={() => navigate('/login')} className="block hover:text-gray-300">Help Center</button>
+                <button onClick={() => document.querySelector('section.bg-gradient-to-b')?.scrollIntoView({ behavior: 'smooth' })} className="block hover:text-gray-300">FAQ</button>
+                <button onClick={() => navigate('/login')} className="block hover:text-gray-300">Status</button>
+                <button onClick={() => navigate('/login')} className="block hover:text-gray-300">Tickets</button>
               </div>
             </div>
             <div>
               <p className="font-semibold text-sm mb-3">Legal</p>
               <div className="space-y-2 text-sm text-gray-500">
-                <p className="hover:text-gray-300 cursor-pointer">Privacy</p>
-                <p className="hover:text-gray-300 cursor-pointer">Terms</p>
-                <p className="hover:text-gray-300 cursor-pointer">Risk Disclosure</p>
-                <p className="hover:text-gray-300 cursor-pointer">Cookie Policy</p>
+                <button onClick={() => navigate('/signup')} className="block hover:text-gray-300">Privacy</button>
+                <button onClick={() => navigate('/signup')} className="block hover:text-gray-300">Terms</button>
+                <button onClick={() => navigate('/signup')} className="block hover:text-gray-300">Risk Disclosure</button>
+                <button onClick={() => navigate('/signup')} className="block hover:text-gray-300">Cookie Policy</button>
               </div>
             </div>
           </div>

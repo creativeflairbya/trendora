@@ -1,4 +1,5 @@
 import Busboy from 'busboy';
+import { rateLimit, securityHeaders } from '../../backend/security-shield.js';
 
 export const config = {
   api: {
@@ -131,6 +132,8 @@ Required JSON schema:
 }
 
 export default async function handler(req, res) {
+  securityHeaders(req, res);
+  if (!rateLimit(req, res, { limit: 20, windowMs: 60_000 })) return;
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

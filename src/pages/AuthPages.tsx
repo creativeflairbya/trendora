@@ -11,7 +11,7 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
   const [phoneCode, setPhoneCode] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [showReset, setShowReset] = useState(false);
-  const [resetEmail, setResetEmail] = useState('creativeflairbya@gmail.com');
+  const [resetEmail, setResetEmail] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,6 +43,28 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
       } else {
         setError('An account with this email already exists');
       }
+    }
+    setLoading(false);
+  };
+
+  const sendResetLink = async () => {
+    if (!resetEmail.trim()) {
+      setError('Enter your email address to receive a reset link.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/v1/password-reset', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Reset email failed');
+      setError(payload.emailSent ? `Password reset link sent to ${resetEmail}.` : `Reset link generated. Configure SMTP to send emails automatically. Link: ${payload.resetUrl}`);
+    } catch (err: any) {
+      setError(err.message || 'Password reset is not configured yet.');
     }
     setLoading(false);
   };
@@ -133,8 +155,8 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
           {showReset && (
             <div className="rounded-xl bg-gray-800/70 border border-gray-700 p-3 space-y-2">
               <p className="text-xs text-gray-400">Password reset / master access recovery</p>
-              <input value={resetEmail} onChange={e => setResetEmail(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-sm outline-none focus:border-cyan-500" />
-              <button type="button" onClick={() => setError(`Reset link sent to ${resetEmail}. Demo mode: check configured recovery inbox.`)} className="w-full py-2 rounded-lg bg-cyan-500 text-gray-950 text-xs font-bold">Send Reset Link</button>
+              <input value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="Enter your email" className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-sm outline-none focus:border-cyan-500" />
+              <button type="button" onClick={sendResetLink} className="w-full py-2 rounded-lg bg-cyan-500 text-gray-950 text-xs font-bold">Send Reset Link</button>
             </div>
           )}
 
@@ -147,7 +169,6 @@ export default function AuthPages({ mode }: { mode: 'login' | 'signup' }) {
           </div>
         </form>
 
-        <p className="mt-4 text-center text-xs text-gray-600">Secure admin recovery is available through the reset option.</p>
       </div>
     </div>
   );

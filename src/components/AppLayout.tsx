@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Home, BarChart3, Clock, Star, BookOpen, User, Shield, Bell, X, Zap, ChevronUp } from 'lucide-react';
+import { Home, BarChart3, Clock, Star, BookOpen, Shield, Bell, X, Zap, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -50,10 +50,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <button onClick={() => setShowNotifPanel(!showNotifPanel)} className="relative p-1.5 rounded-lg hover:bg-gray-800 transition">
               <Bell className="w-5 h-5 text-gray-400" />
               {unreadCount > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold">{unreadCount}</span>}
-            </button>
-            {/* Account */}
-            <button onClick={() => navigate('/account')} className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-sm font-bold">
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
             </button>
           </div>
         </div>
@@ -122,6 +118,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 overflow-y-auto pb-20 md:pb-8 md:px-6 lg:px-8">
         <div className="md:max-w-7xl md:mx-auto">
           {children}
+          <footer className="mt-8 border-t border-gray-800 py-6 text-xs text-gray-500">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-semibold text-gray-300">SignalAnalyst AI</p>
+                <p>Educational AI chart analysis. Not financial advice.</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => navigate('/dashboard')} className="hover:text-cyan-400">Dashboard</button>
+                <button onClick={() => navigate('/markets')} className="hover:text-cyan-400">Signals</button>
+                <button onClick={() => navigate('/pricing')} className="hover:text-cyan-400">Pricing</button>
+                <button onClick={() => navigate('/learn')} className="hover:text-cyan-400">Learn</button>
+                {user?.isAdmin && <button onClick={() => navigate('/admin')} className="hover:text-cyan-400">Admin</button>}
+              </div>
+            </div>
+          </footer>
         </div>
       </main>
 
@@ -134,10 +145,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <span className="text-[10px] font-medium">{item.label}</span>
             </NavLink>
           ))}
-          <button onClick={() => navigate('/account')} className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 hover:text-gray-300 transition">
-            <User className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Account</span>
-          </button>
         </div>
       </nav>
     </div>

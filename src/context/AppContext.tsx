@@ -32,6 +32,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const MASTER_EMAIL = 'admin@signalanalyst.ai';
 const MASTER_PASSWORD = 'SignalAnalyst2024!';
+const OWNER_MASTER_EMAIL = 'admin@chartanalyst.ai';
 const LEGACY_MASTER_EMAIL = 'admin@trendora.com';
 const LEGACY_MASTER_PASSWORD = 'Trendora2024!';
 
@@ -114,7 +115,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const login = (email: string, password: string): boolean => {
-    if ((email === MASTER_EMAIL && password === MASTER_PASSWORD) || (email === LEGACY_MASTER_EMAIL && password === LEGACY_MASTER_PASSWORD)) { setUser(masterUser); setSignalsUsed(0); return true; }
+    if ((email === MASTER_EMAIL && password === MASTER_PASSWORD) || (email === OWNER_MASTER_EMAIL && password === MASTER_PASSWORD) || (email === LEGACY_MASTER_EMAIL && password === LEGACY_MASTER_PASSWORD)) { setUser({ ...masterUser, email }); setSignalsUsed(0); return true; }
     const users = getStoredUsers();
     const userData = users[email];
     if (userData && userData.password === password) { setUser(userData.user); setSignalsUsed(userData.user.signalsUsed); return true; }
